@@ -1,0 +1,1 @@
+git+ssh://git@gitlabsrv/kurim/ramp/isotopes.git@dev#egg=isotopes

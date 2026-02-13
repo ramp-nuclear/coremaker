@@ -1,0 +1,8 @@
+dependencies:
+  - scipy
+  - numpy
+  - cytoolz
+  - pip
+  - pyparsing
+  - more-itertools
+  - multipledispatch
