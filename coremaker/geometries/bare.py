@@ -4,13 +4,18 @@ representations
 """
 from dataclasses import dataclass
 from itertools import chain
-from typing import Sequence
+from typing import Sequence, ClassVar, Any, Type, TypeVar
+try:
+    from typing import Self
+except ImportError:
+    Self = TypeVar("Self")
+
+from ramp_core.serializable import deserialize_default, Serializable
 
 from coremaker.geometries.holed import ConcreteHoledGeometry
 from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.surface import Surface
-from coremaker.surfaces.plane import Plane
-from coremaker.surfaces.util import calculate_plane_intersection_volume
+from coremaker.surfaces.plane import Plane, calculate_plane_intersection_volume
 from coremaker.transform import Transform
 
 
@@ -21,6 +26,8 @@ class BareGeometry:
     _surfaces: Sequence[Surface]
     _volume: float | None = None
 
+    ser_identifier: ClassVar[str] = "BareGeometry"
+
     @property
     def volume(self) -> float | None:
         """Unless directly specified, the volume of a bare geometry is
@@ -28,7 +35,8 @@ class BareGeometry:
         if self._volume is not None:
             return self._volume
         if all(isinstance(s, Plane) for s in self.surfaces):
-            return calculate_plane_intersection_volume(self.surfaces)
+            # Safe because we check those are planes first
+            return calculate_plane_intersection_volume(self.surfaces)  # type: ignore
 
     @property
     def surfaces(self) -> Sequence[Surface]:
@@ -59,6 +67,19 @@ class BareGeometry:
         if isinstance(other, Geometry):
             return frozenset(self.surfaces) == frozenset(other.surfaces)
         return NotImplemented
+
+    def __hash__(self):
+        return hash((tuple(self.surfaces), self.volume))
+
+    def serialize(self) -> tuple[str, dict[str, Any]]:
+        return self.ser_identifier, {"surfaces": [s.serialize() for s in self._surfaces],
+                                     "volume": self._volume}
+
+    @classmethod
+    def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
+        # We assume the data given is actually made up of surfaces, so we can ignore the typing for surfaces
+        return cls(tuple(deserialize_default(t, supported=supported) for t in d["surfaces"]),  # type: ignore
+                   d["volume"])
 
     def __repr__(self) -> str:
         return f"BareGeometry<{tuple(self.surfaces)}>"

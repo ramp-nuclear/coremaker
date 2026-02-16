@@ -1,17 +1,23 @@
 """Protocol for isotopic mixtures as far as core creation cares.
 
 """
-from typing import Iterable, Container, Sequence
+from typing import Iterable, Container, Sequence, Any, Type, TypeVar
 
+try:
+    from typing import Self
+except ImportError:
+    Self = TypeVar("Self")
+
+import numpy as np
 from isotopes import ZAID, Isotope, avogadro
 
 from coremaker.materials.util import parse_chemical, cumulative_dict
-from coremaker.protocols.mixture import Chemical
+from coremaker.protocols.mixture import Chemical, Mixture as MixtureProtocol
 
 TEMPERATURE_PRECISION = 1e-6
 
 
-class Mixture:
+class Mixture(MixtureProtocol):
     """A Concrete implementation of the Mixture Protocol.
 
     This object represents a homogeneous "gas" of ZAIDs, each with its own number
@@ -19,6 +25,7 @@ class Mixture:
 
     """
 
+    ser_identifier = "Mixture"
     __slots__ = ['isotopes', 'temperature', 'sab']
 
     def __init__(self, isotopes: dict[ZAID, float],
@@ -49,6 +56,20 @@ class Mixture:
                          if nd > 0. or not ensure_positive}
         self.temperature = temperature
         self.sab: Sequence[Chemical] = tuple(sab_tables)
+
+    def serialize(self) -> tuple[str, dict[str, Any]]:
+        return self.ser_identifier, {"isotopes": {int(iso): v for iso, v in self.isotopes.items()},
+                                     "temperature": self.temperature,
+                                     "sab_tables": tuple(c.name for c in self.sab),
+                                     }
+
+    @classmethod
+    def deserialize(cls: Type[Self], d: dict[str, Any], *_, **__) -> Self:
+        return cls(isotopes={Isotope.from_int_with_fallback(int(i)): v for i, v in d["isotopes"].items()},
+                   temperature=d["temperature"],
+                   sab_tables=tuple(Chemical[name] for name in d["sab_tables"]),
+                   ensure_positive=False,
+                   )
 
     @classmethod
     def expand(cls, mix: "Mixture",
@@ -244,7 +265,7 @@ class Mixture:
         isos = {iso: other.get(iso, 0.) + nds.get(iso, 0.) for iso in set(nds.keys()) | set(other.keys())}
         return cls(isos, other.temperature, other.sab, ensure_positive=True)
 
-    def __eq__(self, other: "Mixture"):
+    def __eq__(self, other: MixtureProtocol):
         return (self.temperature == other.temperature
                 and self.isotopes == other.isotopes
                 and frozenset(self.sab) == frozenset(other.sab))
@@ -301,31 +322,15 @@ class Mixture:
 
     __str__ = __repr__
 
-    def get(self, k: ZAID, default=0., /) -> float:
-        """Get the density of a specific isotope in the mixture.
-
-        This is modeled slightly like a dictionary's get method.
-
-        Parameters
-        ----------
-        k - Isotope to grab.
-        default - Default density to return if not there.
-
-        """
-
-        try:
-            return self.isotopes.get(k, default)
-        except KeyError as e:
-            raise KeyError(f"Isotope {k} isn't in the mixture") from e
-
-    def weight_densities(self) -> dict[Isotope, float]:
+    def weight_densities(self) -> dict[ZAID, float]:
         """
         Returns
         -------
         A mapping between each isotope in the mixture and its corresponding
         weight density in g/cc.
         """
-        return {iso: den * iso.mass / avogadro
+        # Safe because we check this is in isotope and they have mass...
+        return {iso: den * iso.mass / avogadro if isinstance(iso, Isotope) else np.nan  # type: ignore
                 for iso, den in self.isotopes.items()}
 
 

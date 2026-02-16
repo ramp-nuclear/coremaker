@@ -5,6 +5,7 @@ from typing import Literal
 
 import numpy as np
 from scipy.linalg import norm as norm2
+from ramp_core.serializable import Serializable
 
 from coremaker.geometries.box import Box
 from coremaker.surfaces.cylinder import Cylinder
@@ -22,10 +23,12 @@ def cylinder_bounding_box(center, axis, radius, length):
     return Box(tuple(center), tuple(dx))
 
 
-class FiniteCylinder:
+class FiniteCylinder(Serializable):
     """Represents a finite cylinder in any direction
 
     """
+
+    ser_identifier = "FiniteCylinder"
 
     def __init__(self, center: tuple[cm, cm, cm],
                  radius: cm,
@@ -44,10 +47,16 @@ class FiniteCylinder:
         axis: tuple[float, float, float]
             The symmetry axis of the cylinder.
         """
-        self.center = tuple(np.round(center, DECIMAL_PRECISION))
+        self.center = tuple(float(v) for v in np.round(center, DECIMAL_PRECISION))
         self.radius = radius
         self.length = length
-        self.axis: tuple[cm, cm, cm] = axis
+        if axis == (0., 0., 0.):
+            raise ValueError("Cylinder geometry direction cannot be 0")
+        self.axis = axis
+
+    def _canonical_axis(self) -> np.ndarray:
+        axis = np.asarray(self.axis)
+        return axis / norm2(axis, ord=2)
 
     @classmethod
     def cardinal(cls, center: tuple[cm, cm, cm],
@@ -88,15 +97,14 @@ class FiniteCylinder:
         """The surfaces that make up this finite geometry.
 
         """
-        axis = np.array(self.axis)
-        axis = axis / norm2(axis, ord=2)
+        axis = self._canonical_axis()
         center = np.array(self.center)
         a1, a2, a3 = axis
         bp = axis @ center + self.length / 2
         bm = axis @ center - self.length / 2
         return (Plane(a1, a2, a3, bm),
                 -Plane(a1, a2, a3, bp),
-                Cylinder(tuple(self.center), self.radius, tuple(self.axis), inside=True))
+                Cylinder(self.center, self.radius, self.axis, inside=True))
 
     def transform(self, transform: Transform) -> "FiniteCylinder":
         """Allows for translation and rotation of this geometry.
@@ -111,23 +119,23 @@ class FiniteCylinder:
         A new FiniteCylinder.
 
         """
-        return FiniteCylinder(tuple(transform @ self.center),
+        return FiniteCylinder(tuple(transform @ np.asarray(self.center)),
                               self.radius,
                               self.length,
-                              tuple(transform.rotmat @ self.axis))
+                              tuple(transform.rotmat @ np.asarray(self.axis)))
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, FiniteCylinder):
             return NotImplemented
-        axis = np.array(self.axis)
-        oaxis = np.array(other.axis)
-        axis = axis / norm2(axis, ord=2)
-        oaxis = oaxis / norm2(oaxis, ord=2)
+        axis, oaxis = self._canonical_axis(), other._canonical_axis()
         return (allclose(self.center, other.center) and
                 allclose(abs(axis @ oaxis), 1) and
                 all(isclose(getattr(self, d), getattr(other, d))
                     for d in ('radius', 'length'))
                 )
+
+    def __hash__(self):
+        return hash((self.center, self.radius, self.length, tuple(self._canonical_axis())))
 
     def __repr__(self) -> str:
         return f"FiniteCylinder<Center: {comma_format(self.center)}, " \

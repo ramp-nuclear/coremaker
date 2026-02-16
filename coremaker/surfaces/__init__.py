@@ -6,3 +6,6 @@ If you encounter surfaces that are not supported here, let us know and show us t
 from .cylinder import Cylinder
 from .plane import Plane
 from .sphere import Sphere
+
+jsonable = [Cylinder, Plane, Sphere]
+serialization_identifiers = {c.ser_identifier: c for c in jsonable}

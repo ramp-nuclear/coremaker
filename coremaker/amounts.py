@@ -1,8 +1,7 @@
 from collections import Counter, defaultdict
 from math import isnan
-from typing import Dict
-import numpy as np
 
+import numpy as np
 from isotopes import Isotope, ZAID, avogadro
 from multipledispatch import dispatch
 
@@ -10,14 +9,27 @@ from coremaker.component import ConcreteComponent as Component
 from coremaker.core import Core
 from coremaker.protocols.element import Element
 from coremaker.tree import Tree
+from coremaker.units import kg, cm3, barn_cm_inv
 
 
-ND = float
-cm3 = float
-kg = float
+def nd_to_kg(isotope: Isotope, nd: barn_cm_inv, volume: cm3) -> kg:
+    """Converts an isotopic number density to kg
 
+    Parameters
+    ----------
+    isotope: Isotope
+        The isotope for which the conversion holds
+    nd: barn_cm_inv
+        Number density in 1/barn-cm
+    volume: cm3
+        Volume in cm^3.
 
-def nd_to_kg(isotope: Isotope, nd: ND, volume: cm3):
+    Returns
+    -------
+    kg
+        The mass of this specific isotope in this volume, in kg
+    """
+
     return isotope.mass / avogadro * nd * volume / 1000
 
 
@@ -25,7 +37,7 @@ def _zero(): return 0.
 
 
 @dispatch(Component)
-def parse_amounts(component: Component) -> Dict[Isotope, kg]:
+def parse_amounts(component: Component) -> dict[Isotope, kg]:
     amounts = Counter()
     volume = component.geometry.volume
     amounts.update(
@@ -36,8 +48,8 @@ def parse_amounts(component: Component) -> Dict[Isotope, kg]:
 
 
 @dispatch(Tree)
-def parse_amounts(element: Element) -> Dict[Isotope, kg]:
-    amounts = Counter()
+def parse_amounts(element: Element) -> dict[Isotope, kg]:
+    amounts: Counter[Isotope] = Counter()
     for component in element.components():
         if component.geometry.volume is not None:
             amounts.update(parse_amounts(component))
@@ -50,7 +62,7 @@ def parse_amounts(element: Tree, isotope: Isotope):
 
 
 @dispatch(Core)
-def parse_amounts(core: Core) -> Dict[Isotope, kg]:
+def parse_amounts(core: Core) -> defaultdict[Isotope, kg]:
     """
     return total amounts of isotopes in the core
     """

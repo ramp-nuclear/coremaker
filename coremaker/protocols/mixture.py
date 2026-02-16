@@ -7,10 +7,11 @@ is general enough for all known use cases.
 
 """
 from enum import Enum, auto
-from typing import Protocol, Sequence, Dict, Hashable
+from typing import Protocol, Sequence, Hashable
 
 import numpy as np
 from isotopes import ZAID, Isotope
+from ramp_core.serializable import Serializable
 
 
 class Chemical(Enum):
@@ -31,17 +32,18 @@ class Chemical(Enum):
     def isotopes(self):
         """which isotopes this chemical affect"""
         return tuple(Isotope.from_name(x) for x in {
-            'Be': ('Be9',),
-            'Be_in_BeO': ('Be9',),
-            'O_in_BeO': ('O16',),
+            'Be': ('Be9', 'Be'),
+            'Be_in_BeO': ('Be9', 'Be'),
+            'O_in_BeO': ('O16', 'O'),
+            "Benzene": ('C', 'C12'),
             'Graphite': ('C', 'C12'),
-            'LightWater': ('H1',),
-            'HeavyWater': ('H2',),
-            'Polyethylene': ('H1',),
+            'LightWater': ('H1', 'H'),
+            'HeavyWater': ('H2', 'H'),
+            'Polyethylene': ('H1', 'H'),
         }[self.name])
 
 
-class Mixture(Protocol, Hashable):
+class Mixture(Serializable, Hashable, Protocol):
     """An isotopic mixture representation protocol.
 
     We treat a mixture as an immutable, hashable object. Once any piece of the
@@ -59,6 +61,19 @@ class Mixture(Protocol, Hashable):
 
     def __eq__(self, other: "Mixture") -> bool:
         ...
+
+    def get(self, k: ZAID, default=0., /) -> float:
+        """Get the density of a specific isotope in the mixture.
+
+        Parameters
+        ----------
+        k: ZAID
+            The isotope to get.
+        default: float
+            Default density if the isotope isn't there
+
+        """
+        return self.isotopes.get(k, default)
 
 
 def are_close(mix1: Mixture, mix2: Mixture) -> bool:
@@ -104,4 +119,4 @@ def round_densities(isotopes: dict[ZAID, float],
     >>> round_densities({ZAID(92, 235, 0): 1.29999, ZAID(6, 14, 0): 0.0001}, 3)
     {922350: 1.3, 60140: 0.0}
     """
-    return {iso: np.round(nd, decimals) for iso, nd in isotopes.items()}
+    return {iso: np.round(nd, decimals).item() for iso, nd in isotopes.items()}

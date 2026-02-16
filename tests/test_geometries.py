@@ -2,6 +2,7 @@
 
 """
 from copy import copy
+from itertools import product
 from math import pi
 
 import hypothesis.strategies as st
@@ -10,20 +11,14 @@ import pytest
 from hypothesis import given
 from scipy.linalg import norm as norm2
 
-from conftest import balls, boxes, hexprisms, rectangles, rings, circles
-from conftest import posfloats, annuli, transforms, finitecylinders, medfloats
-from coremaker.geometries.annulus import Annulus, Ring
-from coremaker.geometries.ball import Ball, Circle
-from coremaker.geometries.bare import BareGeometry
-from coremaker.geometries.box import Box, Rectangle
-from coremaker.geometries.cylinder import FiniteCylinder
-from coremaker.geometries.hex import HexPrism
-from coremaker.geometries.infinite import infiniteGeometry
+from conftest import (
+        balls, boxes, hexprisms, rectangles, rings, circles, posfloats, annuli,
+        transforms, finitecylinders, medfloats, translations
+        )
+from coremaker.geometries import *
 from coremaker.plane_intersection import intersect_geometry
 from coremaker.protocols.geometry import Geometry
-from coremaker.surfaces.cylinder import Cylinder
-from coremaker.surfaces.plane import Plane
-from coremaker.surfaces.sphere import Sphere
+from coremaker.surfaces import Cylinder, Plane, Sphere
 from coremaker.transform import Transform, counterclockwise_90deg
 
 
@@ -39,7 +34,7 @@ ORIGIN = (0.0, 0.0, 0.0)
     [Annulus(ORIGIN, 1., 2., 1., (0.0, 0.0, 1.0)),
      Ball(ORIGIN, 1.),
      BareGeometry([]),
-     Box(ORIGIN, np.ones(3, dtype=float)),
+     Box(ORIGIN, (1., 1., 1.)),
      FiniteCylinder(ORIGIN, 1., 1., (0.0, 0.0, 1.0)),
      HexPrism(ORIGIN, 1., 1.),
      infiniteGeometry,
@@ -49,6 +44,22 @@ ORIGIN = (0.0, 0.0, 0.0)
      ])
 def test_example_geometry_is_considered_a_geometry(geo):
     assert isinstance(geo, Geometry), type(geo)
+
+
+points = st.tuples(*(3 * [st.floats(min_value=-10, max_value=10, allow_subnormal=False)]))
+positive_3d = st.tuples(*(3 * [st.floats(min_value=1e-6, max_value=10)]))
+pairs = st.tuples(points, positive_3d).map(lambda x: (x[0], tuple(y1 + y2 for y1, y2 in zip(*x))))
+
+
+@given(pairs)
+def test_box_creation_from_vertices_same_as_dimensions_and_center(vertices):
+    v1, v2 = vertices
+    x1, x2 = map(np.asarray, vertices)
+    dimensions = tuple(x2 - x1)
+    center = tuple((x2 + x1) / 2)
+    b1 = Box.from_vertices(v1, v2)
+    b2 = Box(center, dimensions)
+    assert b1 == b2
 
 
 @given(posfloats, posfloats)
@@ -91,7 +102,33 @@ def test_transform_of_cylinder_does_not_change_its_dimensions(cylinder, trans):
                for d in ['radius', 'length'])
 
 
-# TODO: Add a test for HexPrism
+@given(hexprisms, translations)
+def test_transform_of_hexprisms_does_not_change_their_dimensions(hexa, trans):
+    translated = hexa.transform(trans)
+    assert all(np.isclose(getattr(hexa, d), getattr(translated, d), atol=1e-10, rtol=1e-10)
+               for d in ["pitch", "height"])
+
+
+example_prism = HexPrism((0, 0, 0), 5, 2)
+hexy = np.sqrt(3.) / 2
+
+
+@given(points)
+def test_hexprism_translation_changes_center_as_expected_for_origin_hex(translation):
+    new_prism = example_prism.transform(Transform(translation=translation))
+    assert new_prism.center == translation
+
+
+@given(points)
+def test_hexprism_raises_for_rotation(rotation):
+    rot = Transform.from_rotvec(rotation)
+    if np.all(rot.rotation.as_rotvec() == (0, 0, 0)):
+        example_prism.transform(rot)
+        return
+    with pytest.raises(NotImplementedError):
+        example_prism.transform(rot)
+
+
 @pytest.mark.parametrize(
     ('geo', 'surfaces'),
     [(Annulus((1, 0, 0), 1., 2., 4., (0.0, 0.0, 1.0)),
@@ -100,11 +137,11 @@ def test_transform_of_cylinder_does_not_change_its_dimensions(cylinder, trans):
        Cylinder((1., 0.0, 0.0), 2., (0.0, 0.0, 1.0), inside=True))),
      (Ball((1, 0, 0), 3.),
       (Sphere((1.0, 0.0, 0.0), 3., inside=True),)),
-     (Box(np.array([1, 0, 0]), np.array([1, 2, 3])),
+     (Box((1, 0, 0), (1, 2, 3)),
       (Plane(1, 0, 0, 0.5), -Plane(1, 0, 0, 1.5),
        Plane(0, 1, 0, -1), -Plane(0, 1, 0, 1),
        Plane(0, 0, 1, -1.5), -Plane(0, 0, 1, 1.5))),
-     (Box(np.zeros(3), np.array([1, 2, 3]),
+     (Box((0, 0, 0), (1, 2, 3),
           Transform((1., 0., 0.)) @ counterclockwise_90deg),
       (Plane(1, 0, 0, 0), -Plane(1, 0, 0, 2),
        Plane(0, 1, 0, -0.5), -Plane(0, 1, 0, 0.5),
@@ -114,17 +151,22 @@ def test_transform_of_cylinder_does_not_change_its_dimensions(cylinder, trans):
        Cylinder((1., 0.0, 0.0), 1., (0.0, 0.0, 1.0), inside=True))),
      (infiniteGeometry, tuple()),
      (Circle((1, 0), 3.), (Cylinder((1.0, 0, 0), 3., (0, 0, 1), inside=True),)),
-     (Rectangle(np.array([1, 0]), np.array([1, 2])),
+     (Rectangle((1, 0), (1, 2)),
       (Plane(1, 0, 0, 0.5), -Plane(1, 0, 0, 1.5),
        Plane(0, 1, 0, -1), -Plane(0, 1, 0, 1))),
      (Ring((1, 0), 1., 2.),
       (Cylinder((1., 0.0, 0.0), 1., (0.0, 0.0, 1.0), inside=False),
        Cylinder((1., 0.0, 0.0), 2., (0.0, 0.0, 1.0), inside=True))),
+     (HexPrism((1., 0., 0.), 6., 2.),
+      (Plane(1, 0, 0, -2), -Plane(1, 0, 0, 4),
+       Plane(0.5, hexy, 0, -2.5), Plane(0.5, -hexy, 0, -2.5),
+       -Plane(0.5, hexy, 0, 3.5), -Plane(0.5, -hexy, 0, 3.5),
+       Plane(0, 0, 1, -1), -Plane(0, 0, 1, 1)
+       )),
      ]
 )
 def test_geometry_surfaces_by_example(geo, surfaces):
-    assert sum(s1.isclose(s2)
-               for s1 in geo.surfaces for s2 in surfaces) == len(surfaces)
+    assert sum(s1.isclose(s2) for s1 in geo.surfaces for s2 in surfaces) == len(surfaces)
 
 
 @given(st.one_of(balls, boxes, finitecylinders, annuli, hexprisms, rectangles, circles, rings))
@@ -133,11 +175,11 @@ def test_geometry_surfaces_hashable(geom: Geometry):
 
 
 @pytest.mark.parametrize(
-    ('geo'),
+    'geo',
     [Annulus((1, 0, 0), 1., 2., 4., (0, 0, 1)),
-     Ball(np.array([1, 0, 0]), 3.),
-     Box(np.array([1, 0, 0]), np.array([1, 2, 3])),
-     Box(np.zeros(3), np.array([1, 2, 3])),
+     Ball((1, 0, 0), 3.),
+     Box((1, 0, 0), (1, 2, 3)),
+     Box((0, 0, 0), (1, 2, 3)),
      FiniteCylinder((1, 0, 0), 1., 1., (0, 0, 1))])
 def test_intersection_of_geometry_and_plane_is_empty_when_it_should_be(geo):
     assert intersect_geometry(geo, 0.3)

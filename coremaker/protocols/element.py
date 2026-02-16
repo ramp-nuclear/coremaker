@@ -6,6 +6,8 @@ have to deal with.
 from pathlib import PurePath
 from typing import Protocol, Tuple, Iterable
 
+from ramp_core.serializable import Serializable
+
 from coremaker.protocols.component import Component
 from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.node import NodeLike
@@ -14,7 +16,7 @@ from coremaker.transform import Transform, identity
 PathComp = Tuple[PurePath, Component]
 
 
-class Element(Protocol):
+class Element(Serializable, Protocol):
     """An element is a sub structure of a core.
     It is a protocol for any data structure that adapters should be capable of dealing with.
 
@@ -47,18 +49,28 @@ class Element(Protocol):
         ...
 
     def get_transform(self, path: PurePath) -> Transform:
-        ...
-
-    def geometry_of(self, node: PurePath) -> Geometry:
-        """Returns the geometry at the given path.
+        """Gets the transformation of the geometry at the given path to the coordinate system of the element
 
         Parameters
         ----------
-        node: PurePath
-            The node for which we want the geometry
+        path: PurePath
+            The path to the node for which we want the transformation
 
         """
         ...
+
+    def geometry_of(self, path: PurePath) -> Geometry:
+        """Returns the geometry at the given path.
+
+        The geometry is transformed to the coordinate system of the element.
+
+        Parameters
+        ----------
+        path: PurePath
+            The path to the node for which we want the geometry.
+
+        """
+        return self.nodes[path].geometry.transform(self.get_transform(path))
 
     def transform(self, node: PurePath | None, transform: Transform) -> None:
         """An imperative method to transform everything in a sub-element according to its path.

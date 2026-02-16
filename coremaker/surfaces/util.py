@@ -3,13 +3,9 @@
 """
 from functools import partial
 from itertools import product
-from typing import Iterable, Sequence
+from typing import Iterable
 
 import numpy as np
-from scipy.optimize import linprog
-from scipy.spatial import HalfspaceIntersection, ConvexHull
-
-from coremaker.surfaces.plane import Plane
 
 DECIMAL_PRECISION = 5
 PRECISION = 10 ** -DECIMAL_PRECISION
@@ -72,41 +68,3 @@ def _make_rotvec(rot: float, i: int) -> np.ndarray:
 cardinal_rotations = {
     canonize(_make_rotvec(n * np.pi / 2, ind)) for n, ind in product(range(4), range(3))
 }
-
-
-def calculate_plane_intersection_volume(planes: Sequence[Plane]) -> float | None:
-    """Calculate volume of a solid composed of an intersection of planes (halfspaces).
-    returns None when the dimension of the intersection is less than 3 or if it has infinite extents.
-    Parameters
-    ----------
-    planes - the sequence of planes
-
-    Returns
-    -------
-    float | None
-        The volume of the resulting solid or None if the solid is either empty or has infinite extents
-    """
-    # polyhedra with finite volume have at least 4 faces
-    if len(planes) < 4:
-        return None
-    halfspaces = -np.array([[*p.a, -p.b] for p in planes])
-    # check that the halfspaces span the whole 3d space
-    if np.linalg.matrix_rank(halfspaces[:, :-1]) < 3:
-        return None
-    norm_vector = np.linalg.norm(halfspaces[:, :-1], axis=1)[:, np.newaxis]
-    c = np.zeros((halfspaces.shape[1],))
-    c[-1] = -1
-    A = np.hstack((halfspaces[:, :-1], norm_vector))
-    b = -halfspaces[:, -1:]
-    # noinspection PyDeprecation
-    res = linprog(c, A_ub=A, b_ub=b, bounds=(None, None))
-    # check that the intersection is not empty
-    if not res.success:
-        return None
-    radius = res.x[-1]
-    # check that the intersection is 3d
-    if radius <= 0.0:
-        return None
-    feasible_point = res.x[:-1]
-    hs = HalfspaceIntersection(halfspaces, feasible_point)
-    return ConvexHull(hs.intersections).volume

@@ -4,6 +4,7 @@
 import math
 
 import numpy as np
+from ramp_core.serializable import Serializable
 from scipy.linalg import norm as norm2
 
 from coremaker.surfaces.util import DECIMAL_PRECISION, comma_format
@@ -11,13 +12,14 @@ from coremaker.transform import Transform
 from coremaker.units import cm
 
 
-class Sphere:
+class Sphere(Serializable):
     """A spherical surface.
 
     To understand most methods, see the :class:`~coremaker.protocols.surface.Surface` protocol.
     """
 
     __slots__ = ['center', 'radius', 'inside']
+    ser_identifier = "SurfSphere"
 
     def __init__(self,
                  center: tuple[cm, cm, cm],
@@ -36,7 +38,7 @@ class Sphere:
             A flag to know whether this is the internal or external side of the sphere
         """
         self.center = np.round(center, decimals=DECIMAL_PRECISION)
-        self.radius = float(np.round(radius, decimals=DECIMAL_PRECISION))
+        self.radius = np.round(radius, decimals=DECIMAL_PRECISION).item()
         self.inside = inside
 
     def __hash__(self):

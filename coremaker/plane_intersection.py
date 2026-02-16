@@ -3,6 +3,7 @@ file that contains tools to intersect 3d objects with a plane parallel to the xy
 This is useful when a simplification of the geometry is desired, for example when modeling unit cells for
 cross-section generation. This can also be used for 2d-1d solvers.
 """
+from typing import NoReturn
 
 import numpy as np
 from multipledispatch import dispatch
@@ -16,7 +17,7 @@ from coremaker.geometries.hex import HexPrism, Hexagon
 from coremaker.geometries.holed import ConcreteHoledGeometry
 from coremaker.geometries.infinite import _InfiniteGeometry
 from coremaker.geometries.union import ConcreteUnionGeometry
-from coremaker.grid import CartesianGrid, SpacedGrid
+from coremaker.grids import CartesianGrid, SpacedGrid
 from coremaker.protocols.grid import Lattice, Grid
 from coremaker.transform import Transform
 from coremaker.transform import identity
@@ -29,7 +30,7 @@ def intersect_geometry(geo: Box, z0: float) -> Rectangle | None:
                   geo.center[2] + geo.dimensions[2] / 2)
     if not minv < z0 < maxv:
         return None
-    return Rectangle(center=np.zeros(2), dimensions=geo.dimensions[:2],
+    return Rectangle(center=(0, 0), dimensions=geo.dimensions[:2],
                      transform=restrict_transform(geo.transform_))
 
 
@@ -98,13 +99,13 @@ def intersect_geometry(geo: Annulus, z0: float) -> Ring | None:
 
 
 @dispatch(object, object)
-def intersect_geometry(g: object, z0: float):
+def intersect_geometry(g: object, z0: float) -> NoReturn:
     raise NotImplementedError("Geometry intersection isn't available for geometries of "
                               f"type {type(g)}. Tried to intersect {g}")
 
 
 @dispatch(object, object)
-def intersect_geometry(g: object, z0: float):
+def intersect_geometry(g: object, z0: float) -> NoReturn:
     raise NotImplementedError("Geometry intersection isn't available for geometries of "
                               f"type {type(g)}. Tried to intersect {g}")
 
@@ -133,8 +134,7 @@ def intersect_tree(element: Tree, z0: float) -> Tree:
             if isinstance(node, Lattice):
                 result.nodes[path] = node
             else:
-                result.nodes[path] = Node(dim2geometry, identity,
-                                          mixture=node.mixture)
+                result.nodes[path] = Node(dim2geometry, identity, mixture=node.mixture)
     for element_edges, result_edges in zip(
             [element.inclusive, element.exclusive, element.external_exclusive],
             [result.inclusive, result.exclusive, result.external_exclusive]):
@@ -184,14 +184,14 @@ def intersect_grid(grid: SpacedGrid, z0: float) -> SpacedGrid:
     -------
     SpacedGrid
     """
-    center = sum(l.origin / 4 for l in grid.lattices)
-    return SpacedGrid(center, (grid._shape[0] * 2, grid._shape[1] * 2), grid.lattices[0].dimensions, None,
+    center = sum(lat.origin / 4 for lat in grid.lattices)
+    return SpacedGrid(tuple(center), (grid.shape[0] * 2, grid.shape[1] * 2), grid.lattices[0].dimensions, None,
                       grid.space_dx, grid.space_dy, grid.lattices[0].mixture,
                       {site: intersect_tree(rod, z0) for site, rod in grid.contents.items()})
 
 
 @dispatch(object, object)
-def intersect_grid(grid: Grid, z0: float):
+def intersect_grid(grid: Grid, z0: float) -> NoReturn:
     """
     function to intersect a grid. The function intersects all the lattices and all the rods
     of the grid.

@@ -1,15 +1,17 @@
 from itertools import repeat, product, pairwise
+import math
 from pathlib import PurePath
+from typing import Sequence
 
 import numpy as np
 from cytoolz import first
 
 from coremaker.elements.box import ORIGIN
-from coremaker.elements.util import split, symmetric_spacing, \
-    appropriate_resolution
+from coremaker.elements.util import split, appropriate_resolution
 from coremaker.geometries import FiniteCylinder, Annulus
 from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.mixture import Mixture
+from coremaker.transform import Transform
 from coremaker.tree import Tree, Node
 from coremaker.units import cm
 
@@ -40,8 +42,7 @@ def _cylindrically_symmetric_geometry(radius: cm,
     if inner_radius == 0.:
         return FiniteCylinder(center, radius, length, axis)
     else:
-        return Annulus(center, inner_radius, radius,
-                       length, axis)
+        return Annulus(center, inner_radius, radius, length, axis)
 
 
 # noinspection PyPep8Naming
@@ -70,8 +71,7 @@ def AnnulusTree(inner_radius: cm,
                                             axis=axis,
                                             center=center,
                                             inner_radius=inner_radius)
-    element.nodes[root_path] = Node(geo,
-                                    mixture=mixture)
+    element.nodes[root_path] = Node(geo, mixture=mixture)
     return element
 
 
@@ -93,9 +93,8 @@ def CylinderTree(radius: cm,
     axis - The symmetry axis of the cylinder.
     center - The location of the center compared to the origin in cm.
     """
-    return AnnulusTree(outer_radius=radius, length=length,
-                       mixture=mixture, root_path=root_path,
-                       axis=axis, center=center, inner_radius=0.)
+    return AnnulusTree(outer_radius=radius, length=length, mixture=mixture, 
+                       root_path=root_path, axis=axis, center=center, inner_radius=0.)
 
 
 def _splits_num(radius: cm, resolution: cm, inner_radius: cm = 0.) -> int:
@@ -115,11 +114,15 @@ def _splits_num(radius: cm, resolution: cm, inner_radius: cm = 0.) -> int:
     -------
     The number of splits in the radial direction.
     """
-    return int(((radius ** 2) - (inner_radius ** 2)) / (2 * resolution * inner_radius + resolution ** 2)) + 1
+    if resolution == math.inf:
+        return 1
+    elif np.isclose(resolution, radius - inner_radius, rtol=1e-10):
+        return 2
+    else:
+        return int(((radius ** 2) - (inner_radius ** 2)) / (2 * resolution * inner_radius + resolution ** 2)) + 1
 
 
-def radial_split(radius: cm, resolution: cm = np.inf,
-                 inner_radius: cm = 0.) -> list[cm]:
+def radial_split(radius: cm, resolution: cm = math.inf, inner_radius: cm = 0.) -> list[cm]:
     """
     Return an iterable of all the radial bounds of the radial pieces of
     the chunked cylindrically symmetric structure.
@@ -139,13 +142,11 @@ def radial_split(radius: cm, resolution: cm = np.inf,
     """
     n = _splits_num(radius, resolution, inner_radius)
 
-    def _seq(i):
-        return np.sqrt((i / n * (radius ** 2))
-                       - (i / n - 1) * inner_radius ** 2)
-    return list(map(_seq, range(0, n + 1)))
+    return [np.sqrt((i / n * (radius ** 2)) - (i / n - 1) * inner_radius ** 2) 
+            for i in range(n+1)]
 
 
-def axial_split(length: cm, resolution: cm = np.inf) -> list[cm]:
+def axial_split(length: cm, resolution: cm = math.inf) -> list[cm]:
     """
     Returns the axial split of the cylinder/annulus at the given resolution.
     Specifically, the return value is a list where each entry is the size of
@@ -160,7 +161,7 @@ def axial_split(length: cm, resolution: cm = np.inf) -> list[cm]:
     return list(repeat(length / n, n))
 
 
-def _piece_centers(lengths: list[cm],
+def _piece_centers(lengths: Sequence[cm],
                    axis: tuple[float, float, float],
                    center: tuple[cm, cm, cm] = ORIGIN):
     """
@@ -168,15 +169,35 @@ def _piece_centers(lengths: list[cm],
 
     Parameters
     ----------
-    lengths - A list of the lengths of each axial slice.
-    axis - The axis of symmetry of the cylinder/annulus.
-    center - The location of the center compared to the origin in cm.
+    lengths: Sequence[cm]
+        The lengths of each axial slice
+    axis: tuple[float, float, float]
+        The symmetry axis direction vector
+    center: tuple[cm, cm, cm]    
+        The cylinder/annulus center location in cm.
+
     """
-    center = np.asarray(center)
-    n = len(lengths)
-    unit_length = sum(lengths) / n
-    step = unit_length * np.asarray(axis) / np.linalg.norm(axis)
-    return [tuple(point) for point in symmetric_spacing(n, step, center)]
+    return [tuple(np.asarray(v) + center) for v in _piece_translations(lengths, axis)]
+
+
+def _piece_translations(lengths: Sequence[cm],
+                        axis: tuple[float, float, float]):
+    """Returns transform of each of the axial slices of the cylinder/annulus.
+
+    Parameters
+    ----------
+    lengths: Sequence[cm]
+        The lengths of each axial slice
+    axis: tuple[float, float, float]
+        The symmetry axis direction vector
+
+    """
+    axis = np.asarray(axis) / np.linalg.norm(axis)
+    lengths = [0.] + list(lengths)
+    steps_size = np.array([(x + y) / 2 for x, y in pairwise(lengths)])
+    steps = np.outer(steps_size, axis)
+    length = np.sum(lengths)
+    return [tuple(step - length / 2 * axis) for step in steps.cumsum(axis=0)]
 
 
 # noinspection PyPep8Naming
@@ -186,7 +207,7 @@ def ChunkedAnnulusTree(inner_radius: cm,
                        mixture: Mixture,
                        root_path: PurePath,
                        axis: tuple[float, float, float],
-                       resolution: tuple[cm, cm] = (np.inf, np.inf),
+                       resolution: tuple[cm, cm] = (math.inf, math.inf),
                        center: tuple[cm, cm, cm] = ORIGIN) -> Tree:
     """
     Returns a tree object that models an element with the outer geometry of
@@ -194,7 +215,7 @@ def ChunkedAnnulusTree(inner_radius: cm,
 
     Parameters
     ----------
-    inner_radius :
+    inner_radius:
         The inner radius of the annulus.
     outer_radius:
         The outer radius of the annulus.
@@ -209,35 +230,27 @@ def ChunkedAnnulusTree(inner_radius: cm,
     resolution: tuple[cm, cm]
         The radial resolution and axial resolution of the annulus, respectively.
         The resolution defines the maximal size of a piece in the corresponding
-            direction.
+        direction.
     center:
         The location of the center compared to the origin in cm.
     """
     element = Tree()
-    outer_geo = _cylindrically_symmetric_geometry(outer_radius, length,
-                                                  axis,
-                                                  center,
-                                                  inner_radius)
+    outer_geo = _cylindrically_symmetric_geometry(
+            outer_radius, length, axis, center, inner_radius)
     element.nodes[root_path] = Node(outer_geo)
     radial_resolution, axial_resolution = resolution
     radii = radial_split(outer_radius, radial_resolution,
                          inner_radius=inner_radius)
     lengths = axial_split(length, axial_resolution)
-    piece_centers = _piece_centers(lengths, axis, center)
+    transforms = _piece_translations(lengths, axis)
     piece_paths = []
-    for (piece_center, piece_length), (inner_radius, outer_radius) in \
-            product(zip(piece_centers, lengths), pairwise(radii)):
-        geometry = _cylindrically_symmetric_geometry(outer_radius,
-                                                     piece_length,
-                                                     axis,
-                                                     piece_center,
-                                                     inner_radius)
-        name = f'Piece:({inner_radius:.1e}<r<{outer_radius:.1e}, c={", ".join(f"{v:.1e}" for v in piece_center)})'
+    for (transform, piece_length), (inner_radius, outer_radius) in product(zip(transforms, lengths), pairwise(radii)):
+        geometry = _cylindrically_symmetric_geometry(outer_radius, piece_length, axis, center, inner_radius)
+        name = f"Piece:({inner_radius:.1e}<r<{outer_radius:.1e}, c={', '.join(f'{c + t:.1e}' for c, t in zip(center, transform))})"
         path = root_path / PurePath(name)
-        element.nodes[path] = Node(geometry, mixture=mixture)
+        element.nodes[path] = Node(geometry, mixture=mixture, transform=Transform(transform))
         piece_paths.append(path)
-    element.inclusive[root_path] = [(path, element.nodes[path])
-                                    for path in piece_paths]
+    element.inclusive[root_path] = [(path, element.nodes[path]) for path in piece_paths]
     return element
 
 
@@ -247,11 +260,12 @@ def ChunkedCylinderTree(radius: cm,
                         mixture: Mixture,
                         root_path: PurePath,
                         axis: tuple[float, float, float],
-                        resolution: tuple[cm, cm] = (np.inf, np.inf),
-                        center: tuple[cm, cm, cm] = ORIGIN) -> Tree:
+                        resolution: tuple[cm, cm] = (math.inf, math.inf),
+                        center: tuple[cm, cm, cm] = ORIGIN,
+                        ) -> Tree:
     """
     Returns a tree object that models an element with the outer geometry of
-    a cyliner, but is chunked into many pieces of equal volume.
+    a cylinder, but is chunked into many pieces of equal volume.
 
     Parameters
     ----------
@@ -282,18 +296,119 @@ def ChunkedCylinderTree(radius: cm,
                               inner_radius=0.)
 
 
+def UnequallyChunkedAnnulusTree(inner_radius: cm,
+                                outer_radius: cm,
+                                length: cm,
+                                mixture: Mixture,
+                                root_path: PurePath,
+                                axis: tuple[float, float, float],
+                                lengths: Sequence[cm],
+                                center: tuple[cm, cm, cm] = ORIGIN,
+                                ) -> Tree:
+    """
+    Returns a tree object that models an element with the outer geometry of
+    an annulus, but is chunked into many pieces of unequal volume.
+
+    Parameters
+    ----------
+    radius:
+        The radius of the cylinder.
+    length:
+        The length of the cylinder.
+    mixture:
+        The mixture of the cylinder.
+    root_path:
+        The path to the root node of the tree object.
+    axis:
+        The axis of symmetry of the cylinder.
+    lengths:
+        The split to different lengths along the cylinder axis.
+    center:
+        The location of the center compared to the origin in cm.
+    """
+    element = Tree()
+    outer_geo = _cylindrically_symmetric_geometry(
+            outer_radius, length, axis, center, inner_radius)
+    element.nodes[root_path] = Node(outer_geo)
+    radii = radial_split(outer_radius, inner_radius=inner_radius)
+    centers = _piece_centers(lengths, axis, center)
+    transforms = _piece_translations(lengths, axis)
+    piece_paths = []
+    for (transform, piece_length), (inner_radius, outer_radius) in product(zip(transforms, lengths), pairwise(radii)):
+        geometry = _cylindrically_symmetric_geometry(
+            outer_radius, piece_length, axis, center, inner_radius)
+        name = f"Piece:({inner_radius:.1e}<r<{outer_radius:.1e}, c={', '.join(f'{c + t:.1e}' for c, t in zip(center, transform))})"
+        path = root_path / PurePath(name)
+        element.nodes[path] = Node(geometry, mixture=mixture, transform=Transform(transform))
+        piece_paths.append(path)
+
+    element.inclusive[root_path] = [(path, element.nodes[path]) for path in piece_paths]
+    return element
+
+
+def UnequallyChunkedCylinderTree(radius: cm,
+                                 length: cm,
+                                 mixture: Mixture,
+                                 root_path: PurePath,
+                                 axis: tuple[float, float, float],
+                                 lengths: Sequence[cm],
+                                 center: tuple[cm, cm, cm] = ORIGIN,
+                                 ) -> Tree:
+    """
+    Returns a tree object that models an element with the outer geometry of
+    a cylinder, but is chunked into many pieces of unequal volume.
+
+    Parameters
+    ----------
+    radius:
+        The radius of the cylinder.
+    length:
+        The length of the cylinder.
+    mixture:
+        The mixture of the cylinder.
+    root_path:
+        The path to the root node of the tree object.
+    axis:
+        The axis of symmetry of the cylinder.
+    lengths:
+        The split to different lengths along the cylinder axis.
+    center:
+        The location of the center compared to the origin in cm.
+    """
+    return UnequallyChunkedAnnulusTree(outer_radius=radius,
+                                       length=length,
+                                       mixture=mixture,
+                                       root_path=root_path,
+                                       axis=axis,
+                                       lengths=lengths,
+                                       center=center,
+                                       inner_radius=0.)
+
+
+def _f(r: float, o_r: float, i: int) -> float:
+    """Equal volume split"""
+    return math.sqrt(((o_r ** 2 - r ** 2) / i) + r ** 2) - r
+
+
 def appropriate_radial_resolution(radial_split_num: int,
                                   outer_radius: cm,
                                   inner_radius: cm = 0.) -> cm:
-    """
-    A tool to determine the correct radial resolution for a desired
+    """A tool to determine the correct radial resolution for a desired
     amount of radial pieces.
 
     Parameters
     ----------
-    radial_split - An integer that specifies the amount of radial pieces.
-    outer_radius - The outer radius of the annulus/cylinder
-    inner_radius - The inner radius of the annulus, 0. for a cylinder.
+    radial_split: int
+        The amount of radial pieces.
+    outer_radius: cm
+        The outer radius of the annulus/cylinder
+    inner_radius: cm
+        The inner radius of the annulus, 0. for a cylinder.
+
+    Returns
+    -------
+    cm
+        A resolution that corresponds to the desired amount of radial pieces.
 
     Examples
     --------
@@ -305,35 +420,28 @@ def appropriate_radial_resolution(radial_split_num: int,
     >>> radial_regions_num
     10
 
-    Returns
-    -------
-    float
-        A resolution that corresponds to the desired amount of radial pieces.
     """
     if radial_split_num == 1:
-        return np.inf
-
-    def f(i):
-        # based on the assumption that the pieces are of equal volume.
-        return np.sqrt((outer_radius ** 2 - inner_radius ** 2) / i
-                       + inner_radius ** 2) - inner_radius
-    return (f(radial_split_num) + f(radial_split_num - 1)) / 2
+        return math.inf
+    return (_f(inner_radius, outer_radius, radial_split_num) + _f(inner_radius, outer_radius, radial_split_num-1)) / 2
 
 
-def appropriate_axial_resolution(axial_split: int,
-                                 length: cm) -> cm:
+def appropriate_axial_resolution(axial_split: int, length: cm) -> cm:
     """
     A tool to determine the correct axial resolution for a desired amount of
     axial pieces.
 
     Parameters
     ----------
-    axial_split - An integer that specifies the amount of axial pieces.
-    length - The length of the cylinder/annulus.
+    axial_split: int
+        The amount of axial pieces.
+    length: cm
+        The length of the cylinder/annulus.
 
     Returns
     -------
-    A resolution that corresponds to the desired amount of axial pieces.
+    cm
+        A resolution that corresponds to the desired amount of axial pieces.
     """
+    return first(appropriate_resolution((length,), (axial_split,)))
 
-    return first(appropriate_resolution((length, ), (axial_split, )))

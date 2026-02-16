@@ -9,11 +9,13 @@ It is still best to make those specific assumptions as local as possible, so new
 """
 from typing import Protocol, Hashable
 
+from ramp_core.serializable import Serializable
+
 from coremaker.transform import Transform
 from coremaker.units import cm
 
 
-class Surface(Protocol, Hashable):
+class Surface(Serializable, Hashable, Protocol):
     """Representation of a surface
 
     """

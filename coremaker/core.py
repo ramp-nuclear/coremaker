@@ -24,7 +24,13 @@ path within the element at the site to the component.
 
 """
 from pathlib import PurePath
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Any, Type, TypeVar
+try:
+    from typing import Self
+except ImportError:
+    Self = TypeVar("Self")
+
+from ramp_core.serializable import Serializable, deserialize_default
 
 from coremaker.geometries.union import ConcreteUnionGeometry
 from coremaker.protocols.core import Core as CoreProtocol, AliasMap, Site
@@ -41,6 +47,8 @@ class Core(CoreProtocol):
     """A concrete implementation of the Core protocol using a Tree-like object.
 
     """
+
+    ser_identifier = "Core"
 
     def __init__(self, grid: Grid,
                  aliases: AliasMap,
@@ -77,6 +85,25 @@ class Core(CoreProtocol):
         self.aliases = aliases
         self.tree = tree
         self._outer_geometry = outer_geometry
+
+    def serialize(self) -> tuple[str, dict[str, Any]]:
+        aliases = {alias: [explanation, [str(path) for path in paths]]
+                   for alias, (explanation, paths) in self.aliases.items()}
+        return self.ser_identifier, {"grid": self.grid.serialize(),
+                                     "aliases": aliases,
+                                     "tree": self.tree.serialize(),
+                                     "outer_geometry": self._outer_geometry.serialize() if self._outer_geometry else None
+                                     }
+
+    @classmethod
+    def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
+        grid = deserialize_default(d["grid"], supported=supported)
+        tree = deserialize_default(d["tree"], supported=supported, default=Tree)
+        geom = (deserialize_default(d["outer_geometry"], supported=supported) 
+                if d["outer_geometry"] is not None else None)
+        aliases = {alias: (e, [PurePath(p) for p in paths]) for alias, (e, paths) in d["aliases"].items()}
+        return cls(grid=grid, aliases=aliases, tree=tree, outer_geometry=geom)
+        
 
     def __getitem__(self, key: PurePath) -> NodeLike:
         """Gets you a node using its path.
@@ -141,6 +168,7 @@ class Core(CoreProtocol):
     @property
     def free_elements(self) -> Iterable[tuple[str, Tree]]:
         yield str(TREE_NAME), self.tree
+    
     free_elements.__doc__ = CoreProtocol.free_elements.__doc__
 
     @property

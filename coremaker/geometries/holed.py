@@ -1,22 +1,29 @@
 """A concrete implementation of the holed geometry protocol
 
 """
-from typing import Sequence
+from typing import Sequence, Any, Type, TypeVar
+try:
+    from typing import Self
+except ImportError:
+    Self = TypeVar("Self")
+
+from ramp_core.serializable import Serializable, deserialize_default
 
 from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.surface import Surface
 from coremaker.transform import Transform
 
 
-class ConcreteHoledGeometry:
+class ConcreteHoledGeometry(Serializable):
     """A geometry that is defined with some surfaces excluded.
     """
 
+    ser_identifier = "HoledGeometry"
     __slots__ = ['inclusive', 'internal_exclusives', 'external_exclusives', 'exclusives']
 
     def __init__(self, inclusive: Geometry,
                  internal_exclusives: Sequence[Geometry],
-                 external_exclusive: Sequence[Geometry] = ()):
+                 external_exclusives: Sequence[Geometry] = ()):
         """
         Parameters
         ----------
@@ -24,12 +31,12 @@ class ConcreteHoledGeometry:
             The geometry things lie totally within
         internal_exclusives: Sequence[Geometry]
             The holes in the cheese.
-        external_exclusive: Sequence[Geometry]
+        external_exclusives: Sequence[Geometry]
             The holes in the cheese that are sticking out of the cheese.
         """
         self.inclusive = inclusive
         self.internal_exclusives = internal_exclusives
-        self.external_exclusives = external_exclusive
+        self.external_exclusives = external_exclusives
         self.exclusives = list(self.internal_exclusives) + list(self.external_exclusives)
 
     @property
@@ -70,3 +77,32 @@ class ConcreteHoledGeometry:
         return type(self)(self.inclusive.transform(transform),
                           [g.transform(transform) for g in self.internal_exclusives],
                           [g.transform(transform) for g in self.external_exclusives])
+
+    def _comparable(self):
+        return {"inclusive": self.inclusive,
+                "internal_exclusives": frozenset(self.internal_exclusives),
+                "external_exclusives": frozenset(self.external_exclusives),
+                }
+
+    def serialize(self) -> tuple[str, dict[str, Any]]:
+        data = dict(inclusive=self.inclusive.serialize(),
+                    internal_exclusives=[g.serialize() for g in self.internal_exclusives],
+                    external_exclusives=[g.serialize() for g in self.external_exclusives],
+                    )
+        return self.ser_identifier, data
+
+    @classmethod
+    def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
+        inclusive = deserialize_default(d["inclusive"], supported=supported)
+        internal = [deserialize_default(v, supported=supported) for v in d["internal_exclusives"]]
+        external = [deserialize_default(v, supported=supported) for v in d["external_exclusives"]]
+        return cls(inclusive=inclusive, internal_exclusives=internal, external_exclusives=external)
+
+    def __eq__(self, other: Self):
+        if isinstance(other, ConcreteHoledGeometry):
+            return self._comparable() == other._comparable()
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(tuple(self._comparable().values()))
+

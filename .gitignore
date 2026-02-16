@@ -6,3 +6,4 @@ __pycache__
 venv
 /docs/source/_static/
 .hypothesis
+.pytest_cache

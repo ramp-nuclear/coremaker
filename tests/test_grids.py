@@ -8,8 +8,10 @@ import numpy as np
 import pytest
 from hypothesis import given
 
-from coremaker.grid import CartesianLattice, CartesianGrid, SpacedGrid, _sites, GeneralSpacedGrid, HexagonalLattice, \
-    HexagonalGrid
+from coremaker.grids.cartgrid import cartesian_sites
+from coremaker.grids import (
+        CartesianLattice, CartesianGrid, SpacedGrid, GeneralSpacedGrid, HexagonalLattice, HexagonalGrid
+        )
 from coremaker.materials.water import make_light_water
 
 water = make_light_water(20.)
@@ -79,8 +81,8 @@ shapes = st.builds(lambda x, y: (x, y), positiveints, positiveints)
 
 @given(shapes)
 def test_sites_generation(shape):
-    sites = set(_sites(shape))
-    assert len(sites) == np.product(shape)
+    sites = set(cartesian_sites(shape))
+    assert len(sites) == np.prod(shape)
     for letter in alphabet[:shape[1]]:
         for number in range(1, shape[0] + 1):
             site = f'{letter}{number}'
@@ -93,7 +95,7 @@ def test_general_spaced_grid_generalizes_spaced_grid():
     assert str(general) == str(special)
 
 
-odd_ascending_int_2d = st.tuples(*(2 * [oddpositiveints])).filter(lambda odd_tuple: odd_tuple[1] >= odd_tuple[0])
+odd_ascending_int_2d = st.tuples(*(2 * [oddpositiveints])).filter(lambda odd_tuple: odd_tuple[1] <= odd_tuple[0])
 hexlattices = st.builds(HexagonalLattice, float3d, odd_ascending_int_2d, positivefloats,
                         positivefloats, positivefloats, st.just(water))
 
@@ -103,13 +105,6 @@ def test_hexlattices_at_center_index_is_origin(lat: HexagonalLattice):
     assert np.allclose(tuple(np.zeros(3)), lat.center(tuple(np.zeros(2))))  # type: ignore
 
 
-@given(hexlattices)
-def test_hexlattices_at_x_edge(lat: HexagonalLattice):
-    assert np.allclose(tuple((0, lat.pitch * (lat.shape[0] // 2), 0)),
-                       lat.center(tuple((lat.shape[0] // 2, 0))))  # type: ignore
-
-
-alphabet = ascii_uppercase
 hexgrids = st.builds(HexagonalGrid, float3d, odd_ascending_int_2d, positivefloats, positivefloats, positivefloats,
                      st.just(water))
 

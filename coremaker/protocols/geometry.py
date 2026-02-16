@@ -5,14 +5,16 @@ it is best if they can avoid knowing about specific geometries and just use thes
 protocols.
 """
 
-from typing import Protocol, Sequence, runtime_checkable
+from typing import Protocol, Sequence, runtime_checkable, Hashable
+
+from ramp_core.serializable import Serializable
 
 from coremaker.protocols.surface import Surface
 from coremaker.transform import Transform
 
 
 @runtime_checkable
-class Geometry(Protocol):
+class Geometry(Serializable, Hashable, Protocol):
     """A protocol for anything to be considered a geometry for the purposes of defining objects
 
     """
@@ -44,7 +46,7 @@ class Geometry(Protocol):
 
 
 @runtime_checkable
-class HoledGeometry(Protocol):
+class HoledGeometry(Serializable, Protocol):
     """A geometry that is defined with some surfaces excluded.
 
     Parameters
@@ -89,7 +91,7 @@ class HoledGeometry(Protocol):
 
 
 @runtime_checkable
-class UnionGeometry(Protocol):
+class UnionGeometry(Serializable, Protocol):
     """A geometry that is defined as any area within the union of some geometries
 
     """

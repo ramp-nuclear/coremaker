@@ -6,7 +6,9 @@ from collections.abc import MutableMapping
 from typing import Protocol, Iterable, Sequence, runtime_checkable, Hashable
 
 import numpy as np
+from ramp_core.serializable import Serializable
 
+from coremaker.protocols.node import NodeLike
 from coremaker.protocols.element import Element
 from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.mixture import Mixture
@@ -19,7 +21,7 @@ Site = str
 
 
 @runtime_checkable
-class Lattice(Protocol, Hashable):
+class Lattice(NodeLike, Hashable, Protocol):
     """A lattice is a 3D tiling of the space with some repeating structure.
 
     For example, the plane can be split into adjoining squares, or a honeycomb of hexagons.
@@ -29,9 +31,7 @@ class Lattice(Protocol, Hashable):
     is probably not viable in any engineering sense or for most transport codes.
 
     """
-
     mixture: Mixture
-    transform: Transform
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -67,16 +67,6 @@ class Lattice(Protocol, Hashable):
         raise NotImplementedError("This is not supported at the protocol level")
 
     @property
-    def geometry(self) -> Geometry:
-        """The geometry that encompasses the grid i.e. the outer geometry of the entire lattice.
-
-        For example, a hexagonal grid could be made to look round-ish, or it could be made to look like a paralleloid.
-        Similarly, a cartesian grid could be a square, or it could be rectangular.
-
-        """
-        raise NotImplementedError("This is not supported at the protocol level")
-
-    @property
     def inner_geometry(self) -> Geometry:
         """The outer geometry of each tile in the lattice.
 
@@ -84,7 +74,7 @@ class Lattice(Protocol, Hashable):
         raise NotImplementedError("This is not supported at the protocol level")
 
 
-class Grid(MutableMapping[Site, Element]):
+class Grid(Serializable, Protocol):
     r"""A core's grid is where elements are places into the core in a sort of lattice.
 
     A grid is basically made out of lattices, which are a tiling of a 2D space
@@ -189,4 +179,4 @@ class Grid(MutableMapping[Site, Element]):
         """
         raise NotImplementedError("The protocol doesn't support this directly.")
 
-    def __iter__(self): return self.keys()
+    def __len__(self): return len(list(self.keys()))

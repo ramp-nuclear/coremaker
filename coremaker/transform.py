@@ -1,7 +1,7 @@
 """Coordinate transformation object. Used for translation and rotation of other objects in 3D space.
 
 """
-from typing import Tuple, TypeVar, Union
+from typing import Tuple, TypeVar, Union, Any
 
 import numpy as np
 from scipy.sparse import csr_matrix, identity as iden
@@ -41,6 +41,7 @@ class Transform:
 
     """
     __slots__ = ['matrix']
+    ser_identifier = "Transform"
 
     def __init__(self, translation: _Triplet = _zvec,
                  rotation: np.ndarray = np.eye(3, dtype=bool),
@@ -66,6 +67,24 @@ class Transform:
                         else np.array(translation, dtype=dtype))
         mat[-1, :] = np.array([0, 0, 0, 1], dtype=dtype)
         self.matrix = csr_matrix(mat) if sparse else mat
+
+    def serialize(self) -> dict[str, Any]:
+        if self == identity:
+            return {}
+        if self.rotation == identity.rotation:
+            return {"translation": self.translation.flatten().tolist()}
+        if self.is_sparse():
+            return {"matrix": self.matrix.tolist(), "sparse": True}
+        return {"matrix": self.matrix.tolist(), "sparse": False}
+
+    @classmethod
+    def deserialize(cls, d: dict[str, Any], *_, **__):
+        if d == {}:
+            return identity
+        if "translation" in d:
+            return cls(d["translation"], sparse=True)
+        mat = d["matrix"]
+        return cls.from_matrix(csr_matrix(mat) if d["sparse"] else mat)
 
     def is_sparse(self) -> bool:
         """Returns whether the underlying matrix is sparse or not.
@@ -174,8 +193,9 @@ class Transform:
 
     def __eq__(self, other: "Transform") -> bool:
         try:
-            return np.allclose(self.dense_matrix, other.dense_matrix,
-                               rtol=TOLERANCE, atol=TOLERANCE)
+            rotation = self.rotation.approx_equal(other.rotation)
+            translation = np.allclose(self.translation, other.translation, rtol=1e-10, atol=1e-10)
+            return rotation and translation
         except (TypeError, AttributeError):
             return NotImplemented
 

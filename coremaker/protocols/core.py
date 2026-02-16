@@ -4,6 +4,8 @@
 from pathlib import PurePath
 from typing import Protocol, Iterable, Sequence, MutableMapping
 
+from ramp_core.serializable import Serializable
+
 from coremaker.protocols.component import Component
 from coremaker.protocols.element import Element
 from coremaker.protocols.geometry import Geometry
@@ -16,7 +18,7 @@ Site = str
 AliasMap = MutableMapping[str, tuple[str, Sequence[PurePath]]]
 
 
-class Core(Protocol):
+class Core(Serializable, Protocol):
     """The general protocol for how cores should behave in order for packages to use them.
     This object represents a core which is made up of similarly-sized objects in a lattice or in other words, a "Grid".
 
@@ -40,14 +42,14 @@ class Core(Protocol):
     aliases: AliasMap
     grid: Grid
 
-    def get(self, *keys: PurePath | Site) -> Iterable[NodeLike]:
+    def get(self, *keys: PurePath | Site) -> Iterable[Element]:
         """A method to get contents of the core's grid. If you want just one,
         use the __getitem__ instead, since this method always returns an
         iterable.
 
         Parameters
         ----------
-        keys: PurePath
+        keys:
             The keys to look for in the core.
 
         Returns
@@ -86,6 +88,21 @@ class Core(Protocol):
 
         """
         raise NotImplementedError("This is not implemented at the protocol level")
+
+    def geometry_of(self, path: PurePath) -> Geometry:
+        """Gets the absolute geometry for the given path.
+
+        Parameters
+        ----------
+        path: PurePath
+            The path to the required node.
+
+        Returns
+        -------
+        The geometry in the Core's frame of reference
+
+        """
+        return self[path].geometry.transform(self.transform_of(path))
 
     def lattices(self) -> Iterable[tuple[PurePath, Transform, Lattice]]:
         """Yields triplets of lattice name, where it is and the lattice itself.

@@ -5,6 +5,7 @@ import re
 from collections import Counter
 from typing import Dict, Tuple
 
+import pytest
 import hypothesis.strategies as st
 from hypothesis import given, settings
 from isotopes import ZAID, He4, H, Al27, Al, Si, C, O, Cr, He, Isotope
@@ -23,6 +24,11 @@ temperatures = st.floats(min_value=0., max_value=400.)
 densities = st.floats(min_value=1e-6, max_value=2.)
 isodicts = st.shared(st.dictionaries(isos, densities, min_size=1), key='dict')
 keys = isodicts.flatmap(lambda d: st.sampled_from(tuple(d.keys())))
+
+
+@pytest.mark.parametrize("chem", list(Chemical))
+def test_chemical_has_associated_isotopes(chem):
+    assert chem.isotopes
 
 
 @given(isodicts, keys)
@@ -92,10 +98,8 @@ def test_room_condition_helium_gas_has_low_but_existing_density_He4():
 
 
 def test_light_water_at_20degc_by_regression(num_regression):
-    T = 20.
-    water = make_light_water(T)
+    water = make_light_water(20.)
     isotopes_d = {str(iso): den for iso, den in water.isotopes.items()}
-    print(isotopes_d)
     num_regression.check(isotopes_d)
 
 

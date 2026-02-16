@@ -4,6 +4,7 @@
 
 import numpy as np
 
+from ramp_core.serializable import Serializable
 from coremaker.geometries.box import Box
 from coremaker.surfaces.cylinder import Cylinder
 from coremaker.surfaces.sphere import Sphere
@@ -13,9 +14,11 @@ from coremaker.transform import Transform
 from coremaker.units import cm
 
 
-class Ball:
+class Ball(Serializable):
     """A ball shape.
     """
+
+    ser_identifier = "Ball"
 
     def __init__(self, center: tuple[cm, cm, cm] | np.ndarray, radius: cm):
         """
@@ -44,6 +47,9 @@ class Ball:
                     isclose(self.radius, other.radius))
         return NotImplemented
 
+    def __hash__(self):
+        return hash((tuple(self.center), self.radius))
+
     def __repr__(self) -> str:
         return f"Ball<Center: {comma_format(self.center)}, Radius: {self.radius:.3e}>"
 
@@ -55,10 +61,12 @@ class Ball:
         return Box(tuple(self.center), tuple(dimensions))
 
 
-class Circle:
+class Circle(Serializable):
     """
     A 2d circle shape.
     """
+
+    ser_identifier = "Circle"
 
     def __init__(self, center: tuple[cm, cm], radius: cm):
         """
@@ -86,6 +94,8 @@ class Circle:
             return (allclose(self.center, other.center) and
                     isclose(self.radius, other.radius))
         return NotImplemented
+
+    __hash__ = Ball.__hash__
 
     def __repr__(self) -> str:
         return f"Circle<Center: {comma_format(self.center)}, Radius: {self.radius:.3e}>"

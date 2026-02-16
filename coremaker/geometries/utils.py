@@ -17,7 +17,8 @@ def _bounding_box_union(bbox1: Box, bbox2: Box):
 
 def calculate_bounding_box(geometry: Geometry):
     try:
-        return geometry.bounding_box()
+        # Safe because we catch the exception
+        return geometry.bounding_box()  # type: ignore
     except AttributeError:
         pass
     match geometry:

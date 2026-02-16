@@ -15,7 +15,7 @@ from coremaker.geometries.box import Box
 from coremaker.materials.aluminium import al1050
 from coremaker.materials.steel import steel_304L
 from coremaker.plane_intersection import intersect_tree
-from coremaker.transform import Transform, identity
+from coremaker.transform import Transform, identity, rotate180
 from coremaker.tree import _switch, ChildType, Tree
 
 
@@ -119,14 +119,14 @@ def test_shift_tree_multiple_roots_with_relative_shifts_all():
 
 
 @pytest.mark.parametrize(
-    ('tree', 'path', 'geo'),
-    [(example_frame, PurePath('frame'), Box(np.zeros(3), np.array((3., 3., 3.)))),
-     (example_frame, PurePath('frame/picture'), Box(np.zeros(3), np.array((1., 1., 1.)))),
-     (shiftframe, PurePath('frame'), Box(np.zeros(3), np.array((3., 3., 3.)))),
-     (shiftframe, PurePath('frame/picture'),
-      Box(np.array((0.5, 0., 0.)), np.array((1., 1., 1.)))
-      )
+    ("tree", "path", "geo", "tree_transform"),
+    [(example_frame, PurePath("frame"), Box((0, 0, 0), (3., 3., 3.)), identity),
+     (example_frame, PurePath("frame/picture"), Box((0, 0, 0), (1., 1., 1.)), Transform((10., 0., 0.))),
+     (shiftframe, PurePath("frame"), Box((0, 0, 0), (3., 3., 3.)), rotate180),
+     (shiftframe, PurePath("frame/picture"), Box((0.5, 0., 0.), (1., 1., 1.)), rotate180),
      ]
 )
-def test_get_geometry_by_example(tree, path, geo):
-    assert tree.geometry_of(path) == geo
+def test_get_geometry_by_example(tree, path, geo, tree_transform):
+    tree.transform(None, tree_transform)
+    assert tree.geometry_of(path) == geo.transform(tree_transform)
+

@@ -1,1 +1,2 @@
-git+ssh://git@gitlabsrv/kurim/ramp/isotopes.git@dev#egg=isotopes
+isotopes.git@dev#egg=isotopes
+don't forger ramp_core

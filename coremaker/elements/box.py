@@ -1,6 +1,7 @@
 """A tree based box element.
 
 """
+import math
 from itertools import pairwise, product
 from pathlib import PurePath
 
@@ -14,19 +15,19 @@ from coremaker.transform import Transform, identity
 from coremaker.tree import Tree, Node, ChildType
 from coremaker.units import cm
 
-ORIGIN = np.zeros(3, np.float64)
+ORIGIN = (0., 0., 0.)
 
 
 def _framebox(*, picture: Tree,
               frame_dimensions: np.ndarray,
               picture_dimensions: np.ndarray,
               frame_name: PurePath,
-              frame_resolution: tuple[cm, cm, cm] = (np.inf, np.inf, np.inf),
+              frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
               frame_mixture: Mixture,
               picture_translation: np.ndarray = np.array((0., 0., 0.)),
               transform: Transform = identity) -> Tree:
     element = Tree()
-    element.nodes[frame_name] = Node(Box(ORIGIN, frame_dimensions),
+    element.nodes[frame_name] = Node(Box(ORIGIN, tuple(frame_dimensions)),
                                      transform=transform
                                      )
     element.graft(picture, frame_name, ChildType.inclusive)
@@ -61,8 +62,8 @@ def FrameBox(*,
              picture_dimensions: tuple[cm, cm, cm],
              frame_name: PurePath,
              picture_name: PurePath,
-             frame_resolution: tuple[cm, cm, cm] = (np.inf, np.inf, np.inf),
-             picture_resolution: tuple[cm, cm, cm] = (np.inf, np.inf, np.inf),
+             frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
+             picture_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
              frame_mixture: Mixture,
              picture_mixture: Mixture,
              picture_translation: tuple[cm, cm, cm] = (0., 0., 0.),
@@ -147,7 +148,7 @@ def ExcludeFrame(*,
                  picture_dimensions: tuple[cm, cm, cm],
                  frame_name: PurePath,
                  picture_name: PurePath,
-                 picture_resolution: tuple[cm, cm, cm] = (np.inf, np.inf, np.inf),
+                 picture_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
                  frame_mixture: Mixture,
                  picture_mixture: Mixture,
                  picture_translation: tuple[cm, cm, cm] = (0., 0., 0.),
@@ -206,7 +207,7 @@ def ExcludeFrame(*,
 def excludeframe_to_framebox(
         excludeframe: Tree,
         picture_name: PurePath,
-        frame_resolution: tuple[cm, cm, cm] = (np.inf, np.inf, np.inf),
+        frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
 ) -> Tree:
     """Convert an existing ExcludeFrame tree structure to a FrameBox tree structure.
 
@@ -287,7 +288,7 @@ def SplitBox(dimensions: tuple[cm, cm, cm],
 
     """
     element = Tree()
-    element.nodes[name] = Node(Box(ORIGIN, np.array(dimensions)),
+    element.nodes[name] = Node(Box(ORIGIN, dimensions),
                                transform=transform)
     x, y, z = (np.linspace(- dimensions[i] / 2, + dimensions[i] / 2, num=splits + 1)
                for i, splits in enumerate(split(dimensions, resolution)))
@@ -297,7 +298,7 @@ def SplitBox(dimensions: tuple[cm, cm, cm],
                            0.5 * (dz[0] + dz[1])))
         subdim = (dx[1] - dx[0], dy[1] - dy[0], dz[1] - dz[0])
         subname = PurePath(f"Piece:({', '.join(f'{v:.4e}' for v in center)})")
-        newnode = Node(Box(ORIGIN, np.array(subdim)),
+        newnode = Node(Box(ORIGIN, subdim),
                        Transform(translation=center),
                        mixture)
         element.nodes[name / subname] = newnode
@@ -328,7 +329,7 @@ def BoxTree(dimensions: tuple[cm, cm, cm],
 
     """
     element = Tree()
-    element.nodes[name] = Node(Box(ORIGIN, np.array(dimensions)),
+    element.nodes[name] = Node(Box(ORIGIN, dimensions),
                                transform=transform,
                                mixture=mixture)
     return element

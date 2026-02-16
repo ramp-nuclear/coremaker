@@ -10,12 +10,12 @@ import pytest
 from hypothesis import given
 from scipy.linalg import norm as norm2
 
+from conftest import planes, translations, cylinders, spheres, transforms
 from coremaker.surfaces.cylinder import Cylinder
 from coremaker.surfaces.plane import Plane
 from coremaker.surfaces.sphere import Sphere
 from coremaker.surfaces.util import allclose
 from coremaker.transform import Transform, counterclockwise_90deg
-from conftest import planes, translations, cylinders, spheres, transforms
 
 
 @given(translations, planes)
@@ -66,7 +66,12 @@ def test_transform_of_plane_by_example(p, t, res):
 
 def test_zero_coefficients_are_illegal_for_plane():
     with pytest.raises(ValueError):
-        Plane(0, 0, 0, 10)
+        Plane(0, 0, 0, 10, check=True)
+
+
+def test_zero_coefficients_are_illegal_for_plane_normal():
+    with pytest.raises(ValueError):
+        Plane(0, 0, 0, 10).normal((0, 0, 0))
 
 
 @given(cylinders, st.floats(0, 2 * pi))

@@ -5,9 +5,9 @@ Reference Guide
     :maxdepth: 2
 
     coreobjects
-    elements
     surfaces
     geometries
+    elements
     materials
     transforms
 

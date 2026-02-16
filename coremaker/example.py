@@ -1,17 +1,21 @@
+"""Setting up a core made up of a lattice of fuel rods inside a pool of heavy water. 
+The core has 4 hafnium control rods.
+"""
 from copy import deepcopy
+from functools import partial
 from itertools import product
 from operator import truediv
 from pathlib import PurePath
+from string import ascii_uppercase
 
 import isotopes
 import numpy as np
 from cytoolz import valmap
-from cytoolz.functoolz import partial
 
 from coremaker.core import Core, TREE_NAME
 from coremaker.geometries.box import Box
 from coremaker.geometries.infinite import infiniteGeometry
-from coremaker.grid import CartesianGrid, alphabet
+from coremaker.grids import CartesianGrid
 from coremaker.materials import Mixture
 from coremaker.materials.absorbers import hafnium
 from coremaker.materials.aluminium import aluminium
@@ -24,6 +28,7 @@ site_size = 10.
 grid_height = 100.
 lattice_shape = (9, 9)
 lattice_limits = (lattice_shape[0] * site_size, lattice_shape[1] * site_size)
+alphabet = ascii_uppercase
 
 # Constructing the coolant.
 heavy_water = make_heavy_water(temp=room_temperature)

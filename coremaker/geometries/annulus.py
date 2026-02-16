@@ -4,6 +4,7 @@
 from typing import Literal
 
 import numpy as np
+from ramp_core.serializable import Serializable
 from scipy.linalg import norm as norm2
 
 from coremaker.geometries.cylinder import cylinder_bounding_box
@@ -15,10 +16,14 @@ from coremaker.transform import Transform
 from coremaker.units import cm
 
 
-class Annulus:
+class Annulus(Serializable):
     """A finite annulus geometry.
 
     """
+    
+    __slots__ = ("center", "inner_radius", "outer_radius", "length", "axis")
+    
+    ser_identifier = "Annulus"
 
     def __init__(self,
                  center: tuple[cm, cm, cm],
@@ -53,6 +58,8 @@ class Annulus:
         self.inner_radius = inner_radius
         self.outer_radius = outer_radius
         self.length = length
+        if axis == (0., 0., 0.):
+            raise ValueError("Annulus axis is a direction and thus cannot be 0")
         self.axis = axis
 
     @classmethod
@@ -95,19 +102,24 @@ class Annulus:
     def volume(self) -> float:
         return self.length * np.pi * (self.outer_radius ** 2 - self.inner_radius ** 2)
 
+    def _equitable(self):
+        axis = np.asarray(self.axis)
+        axis = axis / norm2(axis, ord=2)
+        return self.center, axis, self.inner_radius, self.outer_radius, self.length
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, Annulus):
             return NotImplemented
-        axis = np.array(self.axis)
-        oaxis = np.array(other.axis)
-        axis = axis / norm2(axis, ord=2)
-        oaxis = oaxis / norm2(oaxis, ord=2)
-
-        return (allclose(self.center, other.center)
-                and allclose(abs(axis @ oaxis), 1)
-                and all(isclose(getattr(self, d), getattr(other, d))
-                        for d in ('inner_radius', 'outer_radius', 'length'))
+        scenter, saxis, *srest = self._equitable()
+        ocenter, oaxis, *orest = other._equitable()
+        return (allclose(scenter, ocenter)
+                and isclose(abs(saxis @ oaxis), 1)
+                and all(isclose(a, b) for a, b in zip(srest, orest))
                 )
+
+    def __hash__(self):
+        c, *r = self.equitable()
+        return hash((tuple(c), *r))
 
     def __repr__(self) -> str:
         return (f"Annulus<Center: {comma_format(self.center)}, "
@@ -139,10 +151,12 @@ class Annulus:
                                      self.length)
 
 
-class Ring:
+class Ring(Serializable):
     """A 2d ring geometry.
 
     """
+
+    ser_identifier = "Ring"
 
     def __init__(self,
                  center: tuple[cm, cm],
@@ -184,6 +198,9 @@ class Ring:
                             for d in ('inner_radius', 'outer_radius'))
                     )
         return NotImplemented
+
+    def __hash__(self):
+        return hash((tuple(self.center.flatten()), self.inner_radius, self.outer_radius))
 
     def __repr__(self) -> str:
         return (f"Ring<Center: {comma_format(self.center)}, "

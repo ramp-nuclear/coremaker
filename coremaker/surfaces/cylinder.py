@@ -4,6 +4,7 @@
 import math
 
 import numpy as np
+from ramp_core.serializable import Serializable
 from scipy.linalg import norm as norm2
 
 from coremaker.protocols.surface import Surface
@@ -12,7 +13,7 @@ from coremaker.transform import Transform
 from coremaker.units import cm
 
 
-class Cylinder:
+class Cylinder(Serializable):
     """A cylinder.
 
     For most methods' explanation see the :class:`~coremaker.protocols.surface.Surface`
@@ -31,6 +32,7 @@ class Cylinder:
         A flag for whether we are discussing the inside or outside the cylinder.
     """
 
+    ser_identifier = "SurfCyl"
     __slots__ = ['center', 'radius', 'axis', 'inside']
 
     def __init__(self,
@@ -52,7 +54,8 @@ class Cylinder:
         inside: bool
             A flag for whether we are discussing the inside or outside the cylinder.
         """
-        # noinspection PyTypeChecker
+        if axis == (0., 0., 0.):
+            raise ValueError("Cylinder axis cannot be 0.")
         self.axis = axis
         self.center = center
         self.radius = radius

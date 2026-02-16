@@ -4,7 +4,6 @@
 from functools import partial
 from pathlib import PurePath
 
-import numpy as np
 import pytest
 
 from coremaker.elements.assembly import singular_root_construction
@@ -16,7 +15,6 @@ from coremaker.materials.steel import steel_304L
 from coremaker.surfaces.plane import Plane
 from coremaker.transform import Transform
 from coremaker.tree import ChildType
-
 
 example_splitbox_dim = (1., 2., 3.)
 example_inner_dim = (0.5, 0.5, 0.5)
@@ -30,7 +28,7 @@ def test_boxtree_has_one_known_component_by_example():
     assert len(components) == 1
     comp = components[0]
     assert comp.mixture == al6061
-    assert comp.geometry == Box(np.zeros(3), np.array(dim))
+    assert comp.geometry == Box((0., 0., 0.), dim)
 
 
 @pytest.fixture(scope='module')
@@ -47,7 +45,7 @@ def test_splitbox_top_has_known_box_geometry_by_example(_example_splitbox):
     roots = tuple(_example_splitbox.roots())
     assert len(roots) == 1
     assert roots[0][0] == PurePath('moo')
-    assert roots[0][1].geometry == Box(np.zeros(3), np.array(example_splitbox_dim))
+    assert roots[0][1].geometry == Box((0., 0., 0.), example_splitbox_dim)
 
 
 def test_splitbox_pieces_do_not_stray_from_outer_geo_by_example(_example_splitbox):
@@ -88,7 +86,7 @@ def test_framebox_top_has_known_box_geometry_by_example(_example_framebox):
     roots = tuple(_example_framebox.roots())
     assert len(roots) == 1
     assert roots[0][0] == PurePath('MooFrame')
-    assert roots[0][1].geometry == Box(np.zeros(3), np.array(example_splitbox_dim))
+    assert roots[0][1].geometry == Box((0., 0., 0.), example_splitbox_dim)
 
 
 def test_framebox_pieces_have_correct_mixtures_by_example(_example_framebox):
@@ -128,7 +126,7 @@ def test_framebox_picture_has_known_box_geometry_by_example(_example_framebox,
                                                             _example_excludeframe):
     for tree in (_example_excludeframe, _example_framebox):
         picture = tree[PurePath('MooFrame') / 'MooPicture']
-        assert picture.geometry == Box(np.zeros(3), np.array(example_inner_dim))
+        assert picture.geometry == Box((0., 0., 0.), example_inner_dim)
 
 
 def test_excludebox_pieces_have_correct_mixtures_by_example(_example_excludeframe):

@@ -53,9 +53,9 @@ def make_water(*, temp: float, impurities: Optional[Dict[Isotope, float]],
     :func:`make_light_water`, :func:`make_heavy_water`
 
     """
-    if main_iso not in {H, H1, D}:
+    if main_iso not in {H1, D}:
         raise ValueError("Main isotope must be either Hydrogen or Deuterium")
-    other_iso = ({H, D} - {main_iso}).pop()
+    other_iso = D if main_iso == H1 else H1
     impurities = impurities or {}
     ρ_w0 = density_strategy(temp)
     ρ_w, ρ_w_other = [ρ_w0 * (1. - sum(impurities.values())) * frac
@@ -112,7 +112,7 @@ def make_light_water(temp: float,
     """
     return make_water(temp=temp, impurities=impurities,
                       expand_naturals=expand_naturals,
-                      purity=1., main_iso=H,
+                      purity=1., main_iso=H1,
                       density_strategy=_H2O,
                       sab_tables=sab_tables)
 

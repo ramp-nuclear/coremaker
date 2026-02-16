@@ -1,4 +1,4 @@
-"""Fuels made out of multiple materials that are assembled together.
+"""Fuels made out of multiple components arranged alongside one another. 
 
 """
 from pathlib import PurePath
@@ -45,7 +45,7 @@ def singular_root_construction(factories: Iterable[FactorySpec],
     root = Node(outer_geometry, transform, root_mixture)
     assembly.nodes[root_path] = root
     for x in factories:
-        factory, transform, suffix=x
+        factory, transform, suffix = x
         branch = factory()
         for rpath, node in tuple(branch.roots()):
             branch.transform(rpath, transform)

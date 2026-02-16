@@ -1,6 +1,7 @@
 """Utilities for elements.
 
 """
+import math
 from pathlib import PurePath
 from typing import Iterable, Generator
 
@@ -12,7 +13,7 @@ from coremaker.transform import Transform, identity
 from coremaker.tree import Tree, Node
 
 
-def appropriate_resolution(dimensions: Iterable[float], split: Iterable[int]) \
+def appropriate_resolution(dimensions: Iterable[float], splits: Iterable[int]) \
         -> Generator[float, None, None]:
     """
     Return the appropriate resolution in each dimension to produce the splitting
@@ -22,16 +23,16 @@ def appropriate_resolution(dimensions: Iterable[float], split: Iterable[int]) \
     ----------
     dimensions: Iterable[float]
         Dimensional length of a piece of geometry, in some length units.
-    split: Iterable[int]
-        The amount of pieces to have in each dimensions.
+    splits: Iterable[int]
+        The amount of pieces to have in each dimension.
 
     Returns
     -------
     Dimensional resolution of a piece of geometry, in the same length units.
     """
     return (length * (1 / (cells_num - 1) + 1 / cells_num) / 2
-            if cells_num > 1 else np.inf
-            for length, cells_num in zip(dimensions, split))
+            if cells_num > 1 else math.inf
+            for length, cells_num in zip(dimensions, splits))
 
 
 def split(dimensions: Iterable[float], resolution: Iterable[float]

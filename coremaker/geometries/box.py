@@ -2,19 +2,40 @@
 
 """
 import itertools as it
+from typing import Any, Type, TypeVar, Union
+
+try:
+    from typing import Self
+except ImportError:
+    Self = TypeVar("Self")
 
 import numpy as np
+from ramp_core.serializable import Serializable
 
 from coremaker.surfaces.plane import Plane
 from coremaker.surfaces.util import DECIMAL_PRECISION, comma_format, allclose
 from coremaker.transform import Transform, identity
 from coremaker.units import cm
 
+T = TypeVar("T", bound=(Union["Box", "Rectangle"]))
 
-class Box:
+
+def _deser(cls: Type[T], d: dict[str, Any], *_, **__) -> T:
+    transform = Transform.deserialize(d["transform"])
+    return cls(center=tuple(0. for _ in range(cls._dim)),
+               dimensions=d["dimensions"],
+               transform=transform)
+
+def _volume(self: T) -> float:
+    return np.prod(self.dimensions).item(0)
+
+class Box(Serializable):
     """
     represents an axis-parallel 3d box with center and dimensions.
     """
+
+    ser_identifier = "BoxGeo"
+    _dim = 3
 
     def __init__(self, center: tuple[cm, cm, cm] | np.ndarray,
                  dimensions: tuple[cm, cm, cm] | np.ndarray,
@@ -37,6 +58,35 @@ class Box:
         self.transform_ = transform @ Transform(translation=center)
         self.dimensions = np.round(dimensions, DECIMAL_PRECISION)
 
+    @classmethod
+    def from_vertices(cls: Type[Self], 
+                      lower_left: tuple[cm, cm, cm] | np.ndarray,
+                      upper_right: tuple[cm, cm, cm] | np.ndarray,
+                      transform: Transform = identity) -> Self:
+        """Construct a box based on its minimal and maximal (x, y, z) vertices.
+
+        Parameters
+        ----------
+        lower_left: tuple[cm, cm, cm] | np.ndarray
+            The coordinates of the minimal (x, y, z) vertex
+        upper_right: tuple[cm, cm, cm] | np.ndarray
+            The coordinates of the maximal (x, y, z) vertex
+        transform: Transform
+            The transformation to apply on a box at that center to get the right box.
+
+        """
+        ll, ur = map(np.asarray, (lower_left, upper_right))
+        center = tuple((ll + ur) / 2)
+        dimensions = tuple(ur - ll)
+        return cls(center, dimensions, transform)
+
+    def serialize(self) -> tuple[str, dict[str, Any]]:
+        return self.ser_identifier, dict(dimensions=self.dimensions.tolist(),
+                                         transform=self.transform_.serialize()
+                                         )
+
+    deserialize = classmethod(_deser)
+
     @property
     def center(self) -> np.ndarray:
         return self.transform_.translation.flatten()
@@ -51,8 +101,7 @@ class Box:
 
     @property
     def volume(self) -> float:
-        # Safe to ignore type because we know the product is a scalar float.
-        return np.prod(self.dimensions)  # type: ignore
+        return _volume(self)
 
     def transform(self, transform: Transform) -> "Box":
         return Box((0.0, 0.0, 0.0),
@@ -64,6 +113,9 @@ class Box:
             return (other.transform_ == self.transform_
                     and allclose(other.dimensions, self.dimensions))
         return NotImplemented
+
+    def __hash__(self):
+        return hash((self.transform_, tuple(self.dimensions)))
 
     def __repr__(self) -> str:
         return (f"Box<Transform: {self.transform_}, "
@@ -78,7 +130,7 @@ class Box:
         return Box(tuple(0.5 * (x0 + x1)), tuple(x1 - x0))
 
 
-class Rectangle:
+class Rectangle(Serializable):
     """A rectangle is a box that someone forgot to make finite in z.
 
     It's lazy but it works.
@@ -89,12 +141,18 @@ class Rectangle:
 
     """
 
+    ser_identifier = "Rectangle"
+    _dim = 2
+
     def __init__(self,
-                 center: tuple[cm, cm] | np.ndarray,
-                 dimensions: tuple[cm, cm] | np.ndarray,
+                 center: tuple[cm, cm],
+                 dimensions: tuple[cm, cm],
                  transform: Transform = identity):
         self.transform_ = transform @ Transform(translation=np.hstack([center, [0]]))
         self.dimensions = np.round(dimensions, DECIMAL_PRECISION)
+
+    serialize = Box.serialize
+    deserialize = classmethod(_deser)
 
     @property
     def surfaces(self) -> tuple[Plane, Plane, Plane, Plane]:
@@ -111,25 +169,28 @@ class Rectangle:
         return tuple(p.transform(self.transform_) for p in planes)  # type: ignore
 
     __eq__ = Box.__eq__
+    __hash__ = Box.__hash__
 
-    volume = Box.volume
+    @property
+    def volume(self) -> float: return _volume(self)
 
     def __repr__(self):
         # noinspection PyTypeChecker
         return Box.__repr__(self).replace('Box', 'Rectangle')
 
     def transform(self, transform: Transform) -> "Rectangle":
-        return Rectangle((0, 0), self.dimensions, transform @ self.transform_)
+        return Rectangle((0., 0.), self.dimensions, transform @ self.transform_)
 
     @property
     def center(self) -> np.ndarray:
         return self.transform_.translation.flatten()[:2]
 
     def bounding_box(self):
-        dimensions=np.hstack((self.dimensions,[0]))
+        dimensions=np.hstack((self.dimensions, [0]))
         edges = np.array(list(it.product(*zip(-dimensions / 2,
                                               dimensions / 2))))
         tr_edges = (np.hstack((edges, np.ones((8, 1)))
                               ) @ self.transform_.matrix.T)[:, :-1]
         x0, x1 = np.min(tr_edges, axis=0), np.max(tr_edges, axis=0)
         return Rectangle(tuple(0.5 * (x0 + x1))[:2], tuple(x1 - x0)[:2])
+
