@@ -2,7 +2,7 @@ Geometrical Protocols
 =====================
 The following protocols are related to geometrical objects.
 These are the most high-level concepts one should rely on, in case concrete specific
-geometries are not something you have to XXXX with. This is guaranteed for any geometry
+geometries are not something you have to handle. This is guaranteed for any geometry
 implementation in the ecosystem.
 
 Surfaces

@@ -1,6 +1,6 @@
 How-To Guide
 ============
-This part of the documentation will XXXX with how users expect to use this package.
+This part of the documentation deals with how users expect to use this package.
 
 Installation
 ------------

@@ -1,6 +1,6 @@
 """A data structure capable of generating named components.
 The underlying protocol is used for defining what kind of object adapters
-have to XXXX with.
+have to deal with.
 
 """
 from pathlib import PurePath

@@ -11,7 +11,7 @@ from coremaker.materials.util import room_temperature
 hafnium = Mixture.alloy(Hf, {Zr: 2.14e-2}, density=12.9,
                         temperature=room_temperature)
 # Taken from IRR1
-aic = Mixture.by_weight_fraction({Ag: 0.8, In: X.XX, Cd: 0.05},
+aic = Mixture.by_weight_fraction({Ag: 0.8, In: 0.15, Cd: 0.05},
                                  density=10.17,
                                  temperature=room_temperature)
 # Taken from PNNL Compendium Rev 2.

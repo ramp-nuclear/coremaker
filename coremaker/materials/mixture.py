@@ -118,7 +118,7 @@ class Mixture:
             This is often referred to as :math:`S_{\alpha\beta}`, hence the name.
             This needs to be accounted for in some materials, such as water.
             A mixture can include more than one chemical, though not all transport
-            codes know how to XXXX with multiple :math:`S_{\alpha\beta}` treatments.
+            codes know how to deal with multiple :math:`S_{\alpha\beta}` treatments.
 
         """
         return cls(cumulative_dict([

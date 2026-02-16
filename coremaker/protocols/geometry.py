@@ -1,6 +1,6 @@
 """General Protocols for geometry objects.
 
-In order for most programs to be able to XXXX with different geometries,
+In order for most programs to be able to handle different geometries,
 it is best if they can avoid knowing about specific geometries and just use these
 protocols.
 """
