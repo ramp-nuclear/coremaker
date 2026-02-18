@@ -14,7 +14,7 @@ __all__ = ['parse_chemical']
 
 _LPAR, _RPAR = map(Suppress, "()")
 _integer = Word(nums)
-_integer.setParseAction(lambda t: int(t[0]))  # Parse time conversion to int
+_integer.set_parse_action(lambda t: int(t[0]))  # Parse time conversion to int
 _element = Word(alphas.upper(), alphas.lower())
 
 _formula = Forward()
@@ -42,7 +42,7 @@ def _multiply_contents(tokens):
         return t.subgroup
 
 
-_term.setParseAction(_multiply_contents)
+_term.set_parse_action(_multiply_contents)
 
 
 def _sum_by_element(tokens: Sequence[tuple[str, int]]):
@@ -69,7 +69,7 @@ def _sum_by_element(tokens: Sequence[tuple[str, int]]):
         return ParseResults([ParseResults([k, v]) for k, v in ctr.items()])
 
 
-_formula.setParseAction(_sum_by_element)
+_formula.set_parse_action(_sum_by_element)
 
 
 def parse_chemical(s: str) -> dict[Isotope, int]:
@@ -103,4 +103,4 @@ def parse_chemical(s: str) -> dict[Isotope, int]:
         the chemical formula.
 
     """
-    return dict((Isotope.from_name(x), n) for x, n in _formula.parseString(s).asList())
+    return dict((Isotope.from_name(x), n) for x, n in _formula.parse_string(s).asList())

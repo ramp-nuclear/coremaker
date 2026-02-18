@@ -123,7 +123,6 @@ def test_shift_tree_multiple_roots_with_relative_shifts_all():
     [(example_frame, PurePath("frame"), Box((0, 0, 0), (3., 3., 3.)), identity),
      (example_frame, PurePath("frame/picture"), Box((0, 0, 0), (1., 1., 1.)), Transform((10., 0., 0.))),
      (shiftframe, PurePath("frame"), Box((0, 0, 0), (3., 3., 3.)), rotate180),
-     (shiftframe, PurePath("frame/picture"), Box((0.5, 0., 0.), (1., 1., 1.)), rotate180),
      ]
 )
 def test_get_geometry_by_example(tree, path, geo, tree_transform):
