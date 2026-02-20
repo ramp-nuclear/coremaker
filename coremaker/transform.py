@@ -74,7 +74,7 @@ class Transform:
         if self.rotation == identity.rotation:
             return {"translation": self.translation.flatten().tolist()}
         if self.is_sparse():
-            return {"matrix": self.matrix.tolist(), "sparse": True}
+            return {"matrix": self.matrix.toarray().tolist(), "sparse": True}
         return {"matrix": self.matrix.tolist(), "sparse": False}
 
     @classmethod

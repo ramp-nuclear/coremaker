@@ -119,11 +119,11 @@ core_tree.exclusive = {heavy_water_pool_name: [(aluminum_lattice_path,
                                                 aluminum_grid.lattice)]}
 core_tree.exclusive[heavy_water_pool_name] += \
     [*zip(hafnium_block_paths.values(), hafnium_block_nodes.values())]
-hafniun_block_aliases = {direction: (f'The {direction}ern hafnium block',
+hafnium_block_aliases = {direction: (f'The {direction}ern hafnium block',
                                      (TREE_NAME / path,))
                          for direction, path in hafnium_block_paths.items()}
-hafniun_block_aliases.update({'All': ('All the hafnium blocks',
+hafnium_block_aliases.update({'All': ('All the hafnium blocks',
                                       tuple(TREE_NAME / path
                                             for path in hafnium_block_paths.values()))})
-example_core = Core(grid=aluminum_grid, aliases=hafniun_block_aliases,
+example_core = Core(grid=aluminum_grid, aliases=hafnium_block_aliases,
                     tree=core_tree, outer_geometry=heavy_water_pool_geometry)
