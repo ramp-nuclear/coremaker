@@ -13,7 +13,7 @@ import numpy as np
 from ramp_core.serializable import Serializable
 
 from coremaker.surfaces.plane import Plane
-from coremaker.surfaces.util import DECIMAL_PRECISION, comma_format, allclose
+from coremaker.surfaces.util import DECIMAL_PRECISION, allclose, comma_format
 from coremaker.transform import Transform, identity
 from coremaker.units import cm
 

@@ -57,10 +57,11 @@ To understand the concept, it's easier if you look at an example of a tree
 creation in any of the factories under :ref:`Elements`.
 
 """
+
 from enum import Enum, auto
-from itertools import product, chain
+from itertools import chain, product
 from pathlib import PurePath
-from typing import Iterable, Any, Type, TypeVar, Sequence
+from typing import Any, Iterable, Sequence, Type, TypeVar
 
 try:
     from typing import Self
@@ -83,15 +84,11 @@ from coremaker.transform import Transform, identity
 
 
 class Node(NodeLike):
-    """A node is a structure in the tree.
-
-    """
+    """A node is a structure in the tree."""
 
     ser_identifier = "Node"
 
-    def __init__(self, geometry: Geometry,
-                 transform: Transform = identity,
-                 mixture: Mixture | None = None):
+    def __init__(self, geometry: Geometry, transform: Transform = identity, mixture: Mixture | None = None):
         """
         Parameters
         ----------
@@ -108,23 +105,26 @@ class Node(NodeLike):
         self.mixture = mixture
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
-        return self.ser_identifier, {"geometry": self.geometry.serialize(),
-                                     "transform": self.transform.serialize(),
-                                     "mixture": self.mixture.serialize() if self.mixture is not None else None,
-                                     }
+        return self.ser_identifier, {
+            "geometry": self.geometry.serialize(),
+            "transform": self.transform.serialize(),
+            "mixture": self.mixture.serialize() if self.mixture is not None else None,
+        }
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
-        mixture = (None if d["mixture"] is None
-                   else deserialize_default(d["mixture"], supported=supported, default=ConcMixture))
+        mixture = (
+            None
+            if d["mixture"] is None
+            else deserialize_default(d["mixture"], supported=supported, default=ConcMixture)
+        )
         geometry = deserialize_default(d["geometry"], supported=supported)
         transform = Transform.deserialize(d["transform"])
         return cls(geometry=geometry, transform=transform, mixture=mixture)
 
     @property
     def geometry(self) -> Geometry:
-        """Gets the geometry of the node.
-        """
+        """Gets the geometry of the node."""
         return self._geometry
 
     @geometry.setter
@@ -139,14 +139,10 @@ class Node(NodeLike):
         return NotImplemented
 
     def _eqparts(self, other: NodeLike):
-        return {attr: getattr(self, attr) == getattr(other, attr)
-                for attr in ["geometry", "transform", "mixture"]
-                }
+        return {attr: getattr(self, attr) == getattr(other, attr) for attr in ["geometry", "transform", "mixture"]}
 
     def __repr__(self) -> str:
-        return f'Node<geometry: {self.geometry}, ' \
-               f'mixture: {self.mixture}, ' \
-               f'transform: {self.transform}>'
+        return f"Node<geometry: {self.geometry}, mixture: {self.mixture}, transform: {self.transform}>"
 
 
 PathNode = tuple[PurePath, NodeLike]
@@ -168,8 +164,9 @@ def _ser(d: dict[PurePath, Sequence[tuple[PurePath, Any]]]) -> dict[str, list[st
 
 
 def _deser(d: dict[str, list[str]], node_d: dict[PurePath, T]) -> dict[PurePath, list[tuple[PurePath, T]]]:
-    return {p: [(p / pp, node_d[p / pp]) for pp in prog]
-            for p, prog in map(lambda x: (PurePath(x[0]), x[1]), d.items())}
+    return {
+        p: [(p / pp, node_d[p / pp]) for pp in prog] for p, prog in map(lambda x: (PurePath(x[0]), x[1]), d.items())
+    }
 
 
 class ChildType(Enum):
@@ -177,6 +174,7 @@ class ChildType(Enum):
     See the documentation for :class:`Tree`
 
     """
+
     inclusive = auto()
     exclusive = auto()
     external_exclusive = auto()
@@ -214,29 +212,32 @@ class Tree(Serializable):
         self.external_exclusive: dict[PurePath, Progeny] = {}
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
-        return (self.ser_identifier, dict(nodes={str(p): n.serialize() for p, n in self.nodes.items()},
-                                          inclusive=_ser(self.inclusive),
-                                          exclusive=_ser(self.exclusive),
-                                          external_exclusive=_ser(self.external_exclusive)
-                                          ))
+        return (
+            self.ser_identifier,
+            dict(
+                nodes={str(p): n.serialize() for p, n in self.nodes.items()},
+                inclusive=_ser(self.inclusive),
+                exclusive=_ser(self.exclusive),
+                external_exclusive=_ser(self.external_exclusive),
+            ),
+        )
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
         tree = cls()
         node_dict = {PurePath(p): deserialize_default(t, supported=supported) for p, t in d["nodes"].items()}
-        d = dict(nodes=node_dict,
-                 inclusive=_deser(d["inclusive"], node_dict),
-                 exclusive=_deser(d["exclusive"], node_dict),
-                 external_exclusive=_deser(d["external_exclusive"], node_dict)
-                 )
+        d = dict(
+            nodes=node_dict,
+            inclusive=_deser(d["inclusive"], node_dict),
+            exclusive=_deser(d["exclusive"], node_dict),
+            external_exclusive=_deser(d["external_exclusive"], node_dict),
+        )
         for k, v in d.items():
             setattr(tree, k, v)
         return tree
 
     def __getitem__(self, item: PurePath) -> NodeLike:
-        """Returns a node using its path.
-
-        """
+        """Returns a node using its path."""
         return self.nodes[item]
 
     def __contains__(self, item: PurePath | NodeLike) -> bool:
@@ -247,9 +248,10 @@ class Tree(Serializable):
 
     def __eq__(self, other: "Tree") -> bool:
         try:
-            return all(getattr(self, attr) == getattr(other, attr)
-                       for attr in
-                       ['nodes', 'inclusive', 'exclusive', 'external_exclusive'])
+            return all(
+                getattr(self, attr) == getattr(other, attr)
+                for attr in ["nodes", "inclusive", "exclusive", "external_exclusive"]
+            )
         except AttributeError:
             pass
         return NotImplemented
@@ -283,11 +285,8 @@ class Tree(Serializable):
             raise KeyError("The requested node was not found in the tree")
 
     def roots(self) -> Iterable[PathNode]:
-        """Yields the nodes that have no parent.
-
-        """
-        yield from ((path, node) for path, node in self.nodes.items()
-                    if len(path.parents) == 1)
+        """Yields the nodes that have no parent."""
+        yield from ((path, node) for path, node in self.nodes.items() if len(path.parents) == 1)
 
     def lineage_walk(self, path: PurePath) -> Iterable[PurePath]:
         """An iterable over all the descendents of a specific node, denoted by its path.
@@ -299,10 +298,9 @@ class Tree(Serializable):
 
         """
         yield path
-        for path, _ in chain(self.exclusive.get(path, ()),
-                             self.inclusive.get(path, ()),
-                             self.external_exclusive.get(path, ())
-                             ):
+        for path, _ in chain(
+            self.exclusive.get(path, ()), self.inclusive.get(path, ()), self.external_exclusive.get(path, ())
+        ):
             yield from self.lineage_walk(path)
 
     def rename(self, oldpath: PurePath, newpath: PurePath) -> None:
@@ -318,19 +316,18 @@ class Tree(Serializable):
 
         """
         if newpath in self.nodes:
-            raise ValueError(
-                f"The new path {newpath} already exists in the tree,"
-                f"so {oldpath} cannot be renamed to it.")
+            raise ValueError(f"The new path {newpath} already exists in the tree,so {oldpath} cannot be renamed to it.")
         if oldpath not in self.nodes:
             raise KeyError(f"Could not find the path {oldpath} to rename it.")
-        self.nodes = {_switch(p, oldpath, newpath): node
-                      for p, node in self.nodes.items()}
-        for attr in ['inclusive', 'exclusive', 'external_exclusive']:
-            self.__setattr__(attr, {
-                _switch(p, oldpath, newpath): [
-                    (_switch(p2, oldpath, newpath), n)
-                    for p2, n in lst]
-                for p, lst in getattr(self, attr).items()})
+        self.nodes = {_switch(p, oldpath, newpath): node for p, node in self.nodes.items()}
+        for attr in ["inclusive", "exclusive", "external_exclusive"]:
+            self.__setattr__(
+                attr,
+                {
+                    _switch(p, oldpath, newpath): [(_switch(p2, oldpath, newpath), n) for p2, n in lst]
+                    for p, lst in getattr(self, attr).items()
+                },
+            )
 
     def is_legal(self) -> bool:
         """Returns True iff all nodes either have a mixture or inclusive children.
@@ -341,12 +338,9 @@ class Tree(Serializable):
         or it will be double booked.
 
         """
-        return all(bool(node.mixture) ^ bool(self.inclusive[path])
-                   for path, node in self.nodes.items())
+        return all(bool(node.mixture) ^ bool(self.inclusive[path]) for path, node in self.nodes.items())
 
-    def get_transform(self, path: PurePath,
-                      memdict: dict[PurePath, Transform] | None = None
-                      ) -> Transform:
+    def get_transform(self, path: PurePath, memdict: dict[PurePath, Transform] | None = None) -> Transform:
         """Get the recursed transform of going through the tree up to path.
 
         Parameters
@@ -365,7 +359,7 @@ class Tree(Serializable):
         memdict = memdict or {}
         if path in memdict:
             return memdict[path]
-        if path == PurePath('.'):
+        if path == PurePath("."):
             memdict[path] = identity
             return identity
         value = self.get_transform(path.parent, memdict) @ self.nodes[path].transform
@@ -374,11 +368,12 @@ class Tree(Serializable):
 
     geometry_of = Element.geometry_of
 
-    def transform(self,
-                  path: PurePath | None,
-                  transform: Transform,
-                  relative_to: Transform | None = None,
-                  ) -> None:
+    def transform(
+        self,
+        path: PurePath | None,
+        transform: Transform,
+        relative_to: Transform | None = None,
+    ) -> None:
         r"""Imperatively transform everything under the tree at a given path.
 
         Parameters
@@ -424,19 +419,20 @@ class Tree(Serializable):
         memdict = {}
         for path, node in sorted(self.nodes.items(), key=lambda x: x[0]):
             if node.mixture and not isinstance(node, Lattice):
-                transgeo = node.geometry.transform(
-                    self.get_transform(path, memdict))
+                transgeo = node.geometry.transform(self.get_transform(path, memdict))
                 direct_holes = [
                     child.geometry.transform(self.get_transform(cpath, memdict))
-                    for cpath, child in self.exclusive.get(path, ())]
+                    for cpath, child in self.exclusive.get(path, ())
+                ]
                 indirect_holes = [
                     child.geometry.transform(self.get_transform(cpath, memdict))
-                    for cpath, child in self.external_exclusive.get(path, ())]
+                    for cpath, child in self.external_exclusive.get(path, ())
+                ]
                 geometry = (
-                    ConcreteHoledGeometry(transgeo, direct_holes,
-                                          indirect_holes)
+                    ConcreteHoledGeometry(transgeo, direct_holes, indirect_holes)
                     if bool(direct_holes) or bool(indirect_holes)
-                    else transgeo)
+                    else transgeo
+                )
                 yield path, ConcreteComponent(node.mixture, geometry.transform(transform))
 
     def components(self) -> Iterable[ConcreteComponent]:
@@ -489,18 +485,18 @@ class Tree(Serializable):
                     edge_dict.pop(p)
         for parent, edge_dict in product(path.parents, edge_dicts):
             if parent in edge_dict:
-                edges = [(x, y) for (x, y) in edge_dict[parent] if
-                         not descendent_of(x, path)]
+                edges = [(x, y) for (x, y) in edge_dict[parent] if not descendent_of(x, path)]
                 if len(edges) > 0:
-                    edge_dict[parent] = dges
+                    edge_dict[parent] = edges
                 else:
                     edge_dict.pop(parent)
 
-    def graft(self,
-              branch: "Tree",
-              node: NodeLike | PurePath,
-              relation: ChildType,
-              ) -> None:
+    def graft(
+        self,
+        branch: "Tree",
+        node: NodeLike | PurePath,
+        relation: ChildType,
+    ) -> None:
         """Grafts a branch onto this tree at a given node.
 
         Parameters
@@ -522,32 +518,27 @@ class Tree(Serializable):
         except KeyError:  # Means that lookup raised an error.
             header = node
         if header not in self.nodes:  # if the path isn't there or the node lookup failed
-            raise KeyError(
-                f"Could not graft onto {header} because it wasn't in the tree")
+            raise KeyError(f"Could not graft onto {header} because it wasn't in the tree")
         if any(header / tail in self.nodes for tail in branch.nodes.keys()):
-            clashes = [header / tail for tail in branch.nodes.keys()
-                       if header / tail in self.nodes]
-            raise ValueError("Cannot graft branch onto tree because there are name "
-                             f"clashes: {clashes}")
+            clashes = [header / tail for tail in branch.nodes.keys() if header / tail in self.nodes]
+            raise ValueError(f"Cannot graft branch onto tree because there are name clashes: {clashes}")
         self.nodes.update({header / tail: v for tail, v in branch.nodes.items()})
-        for attr in ['inclusive', 'exclusive', 'external_exclusive']:
+        for attr in ["inclusive", "exclusive", "external_exclusive"]:
             getattr(self, attr).update(
-                {header / tail: [(header / path, v) for path, v in lst]
-                 for tail, lst in getattr(branch, attr).items()
-                 })
-        d = {ChildType.inclusive: self.inclusive,
-             ChildType.exclusive: self.exclusive,
-             ChildType.external_exclusive: self.external_exclusive
-             }[relation]
+                {header / tail: [(header / path, v) for path, v in lst] for tail, lst in getattr(branch, attr).items()}
+            )
+        d = {
+            ChildType.inclusive: self.inclusive,
+            ChildType.exclusive: self.exclusive,
+            ChildType.external_exclusive: self.external_exclusive,
+        }[relation]
         extension = ((header / tail, n) for tail, n in branch.roots())
         try:
             d[header].extend(extension)
         except KeyError:
             d[header] = list(extension)
 
-    def subtree(self,
-                path: PurePath
-                ) -> "Tree":
+    def subtree(self, path: PurePath) -> "Tree":
         """Creates the subtree of a given tree at a given node.
 
         Parameters
@@ -558,16 +549,14 @@ class Tree(Serializable):
         """
         new = Tree()
         short = PurePath(path.name)
-        new.nodes = {_switch(p, path, short): node
-                     for p, node in self.nodes.items()
-                     if descendent_of(p, path)
-                     }
-        for attr in ['inclusive', 'exclusive', 'external_exclusive']:
-            new.__setattr__(attr,
-                            {_switch(p, path, short): [(_switch(p2, path, short), n)
-                                                       for p2, n in lst
-                                                       if descendent_of(p2, path)]
-                             for p, lst in getattr(self, attr).items()
-                             if descendent_of(p, path)
-                             })
+        new.nodes = {_switch(p, path, short): node for p, node in self.nodes.items() if descendent_of(p, path)}
+        for attr in ["inclusive", "exclusive", "external_exclusive"]:
+            new.__setattr__(
+                attr,
+                {
+                    _switch(p, path, short): [(_switch(p2, path, short), n) for p2, n in lst if descendent_of(p2, path)]
+                    for p, lst in getattr(self, attr).items()
+                    if descendent_of(p, path)
+                },
+            )
         return new

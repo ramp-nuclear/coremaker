@@ -5,7 +5,7 @@ it is best if they can avoid knowing about specific geometries and just use thes
 protocols.
 """
 
-from typing import Protocol, Sequence, runtime_checkable, Hashable
+from typing import Hashable, Protocol, Sequence, runtime_checkable
 
 from ramp_core.serializable import Serializable
 

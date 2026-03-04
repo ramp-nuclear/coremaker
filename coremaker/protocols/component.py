@@ -1,4 +1,4 @@
-from typing import Protocol, Hashable
+from typing import Hashable, Protocol
 
 from coremaker.protocols.geometry import Geometry, HoledGeometry, UnionGeometry
 from coremaker.protocols.mixture import Mixture

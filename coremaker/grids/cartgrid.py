@@ -1,12 +1,11 @@
-"""Concrete implementations for the Grid and Lattice protocols for cartesian geometry.
+"""Concrete implementations for the Grid and Lattice protocols for cartesian geometry."""
 
-"""
 import operator
 from itertools import product
 from string import ascii_uppercase
-from typing import Iterable, Type, TypeVar, Any
+from typing import Any, Iterable, Type, TypeVar
 
-from ramp_core.serializable import deserialize_default
+from ramp_core.serializable import Serializable, deserialize_default
 
 try:
     from typing import Self
@@ -19,7 +18,6 @@ from coremaker.protocols.element import Element
 from coremaker.protocols.grid import Grid, Site
 from coremaker.protocols.mixture import Mixture
 from coremaker.units import cm
-
 
 alphabet = ascii_uppercase
 
@@ -36,7 +34,7 @@ def cartesian_sites(shape: tuple[int, int]) -> Iterable[Site]:
 
     """
     rows, columns = shape[::-1]
-    return (f'{letter}{number}' for letter, number in product(alphabet[:rows], range(1, columns + 1)))
+    return (f"{letter}{number}" for letter, number in product(alphabet[:rows], range(1, columns + 1)))
 
 
 class CartesianGrid(Grid):
@@ -48,13 +46,15 @@ class CartesianGrid(Grid):
 
     ser_identifier = "CartGrid"
 
-    def __init__(self, center: tuple[cm, cm, cm],
-                 shape: tuple[int, int],
-                 dimensions: tuple[cm, cm],
-                 height: cm,
-                 mixture: Mixture,
-                 rod_contents: dict[Site, Element] | None = None,
-                 ):
+    def __init__(
+        self,
+        center: tuple[cm, cm, cm],
+        shape: tuple[int, int],
+        dimensions: tuple[cm, cm],
+        height: cm,
+        mixture: Mixture,
+        rod_contents: dict[Site, Element] | None = None,
+    ):
         self.contents = rod_contents or {}
         self.lattice = CartesianLattice(center, shape, dimensions, height, mixture)
 
@@ -76,18 +76,17 @@ class CartesianGrid(Grid):
         return obj
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
-        return self.ser_identifier, {"contents": serialize_contents(self.contents),
-                                     "lattice": self.lattice.serialize()}
+        return self.ser_identifier, {"contents": serialize_contents(self.contents), "lattice": self.lattice.serialize()}
 
     @classmethod
-    def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type["Serializable"]]) -> Self:
+    def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
         contents = deserialize_contents(d["contents"], supported=supported)
         lattice = deserialize_default(d["lattice"], supported=supported, default=CartesianLattice)
         return cls.from_lattice(contents, lattice)
 
     @property
     def lattices(self) -> tuple[CartesianLattice]:
-        return self.lattice,
+        return (self.lattice,)
 
     lattices.__doc__ = Grid.lattices.__doc__
 
@@ -131,8 +130,7 @@ class CartesianGrid(Grid):
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
-            return all((self.lattice == other.lattice,
-                        self.contents == other.contents))
+            return all((self.lattice == other.lattice, self.contents == other.contents))
         return NotImplemented
 
     def __hash__(self):

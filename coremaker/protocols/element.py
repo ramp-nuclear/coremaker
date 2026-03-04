@@ -4,7 +4,7 @@ have to deal with.
 
 """
 from pathlib import PurePath
-from typing import Protocol, Tuple, Iterable
+from typing import Iterable, Protocol, Tuple
 
 from ramp_core.serializable import Serializable
 

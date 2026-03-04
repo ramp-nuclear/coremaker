@@ -3,10 +3,10 @@
 """
 import math
 from functools import lru_cache
-from typing import Any, Type, TypeVar, Sequence
+from typing import Any, Sequence, Type, TypeVar
 
 from scipy.optimize import linprog
-from scipy.spatial import HalfspaceIntersection, ConvexHull
+from scipy.spatial import ConvexHull, HalfspaceIntersection
 
 try:
     from typing import Self

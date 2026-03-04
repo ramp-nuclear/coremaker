@@ -4,13 +4,14 @@ representations
 """
 from dataclasses import dataclass
 from itertools import chain
-from typing import Sequence, ClassVar, Any, Type, TypeVar
+from typing import Any, ClassVar, Sequence, Type, TypeVar
+
 try:
     from typing import Self
 except ImportError:
     Self = TypeVar("Self")
 
-from ramp_core.serializable import deserialize_default, Serializable
+from ramp_core.serializable import Serializable, deserialize_default
 
 from coremaker.geometries.holed import ConcreteHoledGeometry
 from coremaker.protocols.geometry import Geometry

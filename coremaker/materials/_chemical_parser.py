@@ -6,9 +6,7 @@ from collections import defaultdict
 from typing import Sequence
 
 from isotopes import Isotope
-from pyparsing import (Suppress, Word, nums, alphas, Forward, Group,
-                       Optional, OneOrMore, ParseResults)
-
+from pyparsing import Forward, Group, OneOrMore, Optional, ParseResults, Suppress, Word, alphas, nums
 
 __all__ = ['parse_chemical']
 

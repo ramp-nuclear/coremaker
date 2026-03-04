@@ -5,10 +5,10 @@ import re
 from collections import Counter
 from typing import Dict, Tuple
 
-import pytest
 import hypothesis.strategies as st
+import pytest
 from hypothesis import given, settings
-from isotopes import ZAID, He4, H, Al27, Al, Si, C, O, Cr, He, Isotope
+from isotopes import ZAID, Al, Al27, C, Cr, H, He, He4, Isotope, O, Si
 
 from coremaker.materials import Mixture
 from coremaker.materials.gases import ideal_gas_mixture

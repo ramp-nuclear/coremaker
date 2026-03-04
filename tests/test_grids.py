@@ -8,10 +8,15 @@ import numpy as np
 import pytest
 from hypothesis import given
 
-from coremaker.grids.cartgrid import cartesian_sites
 from coremaker.grids import (
-        CartesianLattice, CartesianGrid, SpacedGrid, GeneralSpacedGrid, HexagonalLattice, HexagonalGrid
-        )
+    CartesianGrid,
+    CartesianLattice,
+    GeneralSpacedGrid,
+    HexagonalGrid,
+    HexagonalLattice,
+    SpacedGrid,
+)
+from coremaker.grids.cartgrid import cartesian_sites
 from coremaker.materials.water import make_light_water
 
 water = make_light_water(20.)

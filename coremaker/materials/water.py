@@ -8,11 +8,12 @@ the DRAGON code.
 """
 # noinspection NonAsciiCharacters
 from itertools import chain
-from typing import Callable, TypeVar, Union, Dict, Optional, Iterable
+from typing import Callable, Dict, Iterable, Optional, TypeVar, Union
 
 import numpy as np
 from cytoolz import unique
-from isotopes import Isotope, H, H1, H2 as D, avogadro, O
+from isotopes import H1, Isotope, O, avogadro
+from isotopes import H2 as D
 from scipy.interpolate import interp1d
 
 from coremaker.materials.mixture import Mixture

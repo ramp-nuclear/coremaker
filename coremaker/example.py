@@ -12,7 +12,7 @@ import isotopes
 import numpy as np
 from cytoolz import valmap
 
-from coremaker.core import Core, TREE_NAME
+from coremaker.core import TREE_NAME, Core
 from coremaker.geometries.box import Box
 from coremaker.geometries.infinite import infiniteGeometry
 from coremaker.grids import CartesianGrid

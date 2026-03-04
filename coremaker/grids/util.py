@@ -2,9 +2,9 @@ from typing import Any, Type
 
 from ramp_core.serializable import Serializable, deserialize_default
 
-from coremaker.tree import Tree
 from coremaker.protocols.element import Element
 from coremaker.protocols.grid import Site
+from coremaker.tree import Tree
 
 
 def serialize_contents(d: dict[Site, Element]) -> dict[Site, tuple[str, dict[str, Any]]]:

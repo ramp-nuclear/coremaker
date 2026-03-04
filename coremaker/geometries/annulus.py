@@ -10,8 +10,7 @@ from scipy.linalg import norm as norm2
 from coremaker.geometries.cylinder import cylinder_bounding_box
 from coremaker.surfaces.cylinder import Cylinder
 from coremaker.surfaces.plane import Plane
-from coremaker.surfaces.util import DECIMAL_PRECISION, comma_format, allclose, \
-    isclose
+from coremaker.surfaces.util import DECIMAL_PRECISION, allclose, comma_format, isclose
 from coremaker.transform import Transform
 from coremaker.units import cm
 

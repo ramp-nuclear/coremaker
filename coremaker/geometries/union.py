@@ -1,7 +1,8 @@
 """Concrete implementation of the UnionGeometry Protocol.
 
 """
-from typing import Iterable, Sequence, Any, Type, TypeVar
+from typing import Any, Iterable, Sequence, Type, TypeVar
+
 try:
     from typing import Self
 except ImportError:

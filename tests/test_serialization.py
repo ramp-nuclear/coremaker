@@ -5,33 +5,61 @@ from string import ascii_lowercase
 
 import hypothesis.strategies as st
 import numpy as np
+from conftest import (
+    annuli,
+    balls,
+    circles,
+    cylinders,
+    finitecylinders,
+    hexagons,
+    hexprisms,
+    medfloats,
+    planes,
+    posfloats,
+    rectangles,
+    rings,
+    spheres,
+)
+from conftest import boxes as boxgeos
 from hypothesis import given, settings
 from hypothesis.extra.numpy import arrays
 from isotopes import ZAID
-from ramp_core import RampJSONEncoder, RampJSONDecoder
+from ramp_core import RampJSONDecoder, RampJSONEncoder
 
-from conftest import (
-        spheres, planes, annuli, balls, boxes as boxgeos, circles, rings, cylinders,
-        rectangles, finitecylinders, hexprisms, hexagons, medfloats, posfloats
-        )
-from coremaker import jsonable, Core
+from coremaker import Core, jsonable
 from coremaker.elements.box import ExcludeFrame
 from coremaker.elements.cylindrically_symmetric import AnnulusTree, ChunkedAnnulusTree
 from coremaker.geometries import (
-        Circle, Ring, Rectangle, Hexagon, BareGeometry, infiniteGeometry, Annulus,
-        Ball, Box as BoxGeo, FiniteCylinder, HexPrism, ConcreteUnionGeometry,
-        )
+    Annulus,
+    Ball,
+    BareGeometry,
+    Circle,
+    ConcreteUnionGeometry,
+    FiniteCylinder,
+    Hexagon,
+    HexPrism,
+    Rectangle,
+    Ring,
+    infiniteGeometry,
+)
+from coremaker.geometries import (
+    Box as BoxGeo,
+)
 from coremaker.geometries.holed import ConcreteHoledGeometry
 from coremaker.grids import (
-        CartesianGrid, CartesianLattice, HexagonalLattice, SpacedGrid, GeneralSpacedGrid,
-        HexagonalGrid, NullGrid
-        )
-from coremaker.materials.mixture import Mixture, Chemical
+    CartesianGrid,
+    CartesianLattice,
+    GeneralSpacedGrid,
+    HexagonalGrid,
+    HexagonalLattice,
+    NullGrid,
+    SpacedGrid,
+)
 from coremaker.materials.aluminium import al1050, al6061
+from coremaker.materials.mixture import Chemical, Mixture
 from coremaker.mesh import CartesianMesh, CylindricalMesh, SphericalMesh
-from coremaker.surfaces import Sphere, Plane, Cylinder
-from coremaker.tree import Tree, Node
-
+from coremaker.surfaces import Cylinder, Plane, Sphere
+from coremaker.tree import Node, Tree
 
 zaids = st.tuples(st.integers(min_value=0, max_value=100),
                   st.integers(min_value=0, max_value=100),

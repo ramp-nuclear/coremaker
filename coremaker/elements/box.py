@@ -12,7 +12,7 @@ from coremaker.geometries.box import Box
 from coremaker.geometries.union import union_bounding_box
 from coremaker.materials.mixture import Mixture
 from coremaker.transform import Transform, identity
-from coremaker.tree import Tree, Node, ChildType
+from coremaker.tree import ChildType, Node, Tree
 from coremaker.units import cm
 
 ORIGIN = (0., 0., 0.)

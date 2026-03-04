@@ -3,9 +3,10 @@
 """
 import hypothesis.strategies as st
 import numpy as np
+from conftest import medfloats, rotations, transforms
 from hypothesis import given, settings
 from scipy.spatial.transform import Rotation
-from conftest import medfloats, rotations, transforms
+
 from coremaker.transform import Transform, identity
 
 arrays = st.tuples(medfloats, medfloats, medfloats).map(np.array)

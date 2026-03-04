@@ -3,14 +3,14 @@
 """
 import math
 from pathlib import PurePath
-from typing import Iterable, Generator
+from typing import Generator, Iterable
 
 import numpy as np
 
 from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.mixture import Mixture
 from coremaker.transform import Transform, identity
-from coremaker.tree import Tree, Node
+from coremaker.tree import Node, Tree
 
 
 def appropriate_resolution(dimensions: Iterable[float], splits: Iterable[int]) \

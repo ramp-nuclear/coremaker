@@ -1,4 +1,4 @@
-from typing import Sequence, Iterable, TypeVar, Type
+from typing import Iterable, Sequence, Type, TypeVar
 
 try:
     from typing import Self
@@ -6,7 +6,7 @@ except ImportError:
     Self = TypeVar("Self")
 
 from coremaker.protocols.element import Element
-from coremaker.protocols.grid import Lattice, Site, Grid
+from coremaker.protocols.grid import Grid, Lattice, Site
 
 
 class NullGrid(Grid):

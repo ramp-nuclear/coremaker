@@ -4,14 +4,13 @@
 from typing import Literal
 
 import numpy as np
-from scipy.linalg import norm as norm2
 from ramp_core.serializable import Serializable
+from scipy.linalg import norm as norm2
 
 from coremaker.geometries.box import Box
 from coremaker.surfaces.cylinder import Cylinder
 from coremaker.surfaces.plane import Plane
-from coremaker.surfaces.util import DECIMAL_PRECISION, allclose, isclose, \
-    comma_format
+from coremaker.surfaces.util import DECIMAL_PRECISION, allclose, comma_format, isclose
 from coremaker.transform import Transform
 from coremaker.units import cm
 

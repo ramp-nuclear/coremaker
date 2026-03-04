@@ -1,11 +1,10 @@
 """Steel based materials
 
 """
-from isotopes import C, Mn, P, S, Fe, Ni, Cr, Si, Mo
+from isotopes import C, Cr, Fe, Mn, Mo, Ni, P, S, Si
 
 from coremaker.materials.mixture import Mixture
 from coremaker.materials.util import room_temperature
-
 
 # Taken from PNNL Compendium Rev 2
 steel_304L = Mixture({C: 3.21e-4, Mn: 1.754e-3, P: 7e-5, S: 4.5e-5,
