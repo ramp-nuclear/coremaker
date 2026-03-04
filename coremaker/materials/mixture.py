@@ -1,7 +1,7 @@
 """Protocol for isotopic mixtures as far as core creation cares.
 
 """
-from typing import Iterable, Container, Sequence, Any, Type, TypeVar
+from typing import Any, Container, Iterable, Sequence, Type, TypeVar
 
 try:
     from typing import Self
@@ -11,8 +11,9 @@ except ImportError:
 import numpy as np
 from isotopes import ZAID, Isotope, avogadro
 
-from coremaker.materials.util import parse_chemical, cumulative_dict
-from coremaker.protocols.mixture import Chemical, Mixture as MixtureProtocol
+from coremaker.materials.util import cumulative_dict, parse_chemical
+from coremaker.protocols.mixture import Chemical
+from coremaker.protocols.mixture import Mixture as MixtureProtocol
 
 TEMPERATURE_PRECISION = 1e-6
 

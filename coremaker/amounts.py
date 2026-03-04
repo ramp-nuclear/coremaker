@@ -2,14 +2,14 @@ from collections import Counter, defaultdict
 from math import isnan
 
 import numpy as np
-from isotopes import Isotope, ZAID, avogadro
+from isotopes import ZAID, Isotope, avogadro
 from multipledispatch import dispatch
 
 from coremaker.component import ConcreteComponent as Component
 from coremaker.core import Core
 from coremaker.protocols.element import Element
 from coremaker.tree import Tree
-from coremaker.units import kg, cm3, barn_cm_inv
+from coremaker.units import barn_cm_inv, cm3, kg
 
 
 def nd_to_kg(isotope: Isotope, nd: barn_cm_inv, volume: cm3) -> kg:

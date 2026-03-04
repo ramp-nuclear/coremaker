@@ -2,19 +2,28 @@
 
 """
 from copy import copy
-from itertools import product
 from math import pi
 
 import hypothesis.strategies as st
 import numpy as np
 import pytest
+from conftest import (
+    annuli,
+    balls,
+    boxes,
+    circles,
+    finitecylinders,
+    hexprisms,
+    medfloats,
+    posfloats,
+    rectangles,
+    rings,
+    transforms,
+    translations,
+)
 from hypothesis import given
 from scipy.linalg import norm as norm2
 
-from conftest import (
-        balls, boxes, hexprisms, rectangles, rings, circles, posfloats, annuli,
-        transforms, finitecylinders, medfloats, translations
-        )
 from coremaker.geometries import *
 from coremaker.plane_intersection import intersect_geometry
 from coremaker.protocols.geometry import Geometry

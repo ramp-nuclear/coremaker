@@ -1,7 +1,7 @@
 import itertools as it
 from functools import partial
-from math import floor, ceil
-from typing import Hashable, Callable
+from math import ceil, floor
+from typing import Callable, Hashable
 
 import numpy as np
 from scipy.linalg import norm

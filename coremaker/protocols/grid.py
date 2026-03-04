@@ -2,20 +2,18 @@
 
 """
 from abc import abstractmethod
-from collections.abc import MutableMapping
-from typing import Protocol, Iterable, Sequence, runtime_checkable, Hashable
+from typing import Hashable, Iterable, Protocol, Sequence, runtime_checkable
 
 import numpy as np
 from ramp_core.serializable import Serializable
 
-from coremaker.protocols.node import NodeLike
 from coremaker.protocols.element import Element
 from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.mixture import Mixture
+from coremaker.protocols.node import NodeLike
 
 __all__ = ['Lattice', 'Grid', 'Site']
 
-from coremaker.transform import Transform
 
 Site = str
 

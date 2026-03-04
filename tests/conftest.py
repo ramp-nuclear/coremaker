@@ -9,7 +9,7 @@ from coremaker.geometries.annulus import Annulus, Ring
 from coremaker.geometries.ball import Ball, Circle
 from coremaker.geometries.box import Box, Rectangle
 from coremaker.geometries.cylinder import FiniteCylinder
-from coremaker.geometries.hex import HexPrism, Hexagon
+from coremaker.geometries.hex import Hexagon, HexPrism
 from coremaker.surfaces.cylinder import Cylinder
 from coremaker.surfaces.plane import Plane
 from coremaker.surfaces.sphere import Sphere

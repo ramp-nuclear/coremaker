@@ -3,11 +3,12 @@
 """
 from typing import Iterable
 
+from isotopes import ZAID
+from scipy.constants import Boltzmann as kb
+from scipy.constants import atmosphere, zero_Celsius
+
 from coremaker.materials import Mixture
 from coremaker.protocols.mixture import Chemical
-from isotopes import ZAID
-from scipy.constants import Boltzmann as kb, zero_Celsius, atmosphere
-
 
 Atmosphere = float
 DegreesCelsius = float

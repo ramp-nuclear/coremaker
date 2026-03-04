@@ -2,7 +2,7 @@
 
 """
 from pathlib import PurePath
-from typing import Protocol, Iterable, Sequence, MutableMapping
+from typing import Iterable, MutableMapping, Protocol, Sequence
 
 from ramp_core.serializable import Serializable
 

@@ -7,12 +7,10 @@ from pathlib import PurePath
 import pytest
 
 from coremaker.elements.assembly import singular_root_construction
-from coremaker.elements.box import BoxTree, SplitBox, FrameBox, ExcludeFrame, \
-    excludeframe_to_framebox
+from coremaker.elements.box import BoxTree, ExcludeFrame, FrameBox, SplitBox, excludeframe_to_framebox
 from coremaker.geometries.box import Box
 from coremaker.materials.aluminium import al6061
 from coremaker.materials.steel import steel_304L
-from coremaker.surfaces.plane import Plane
 from coremaker.transform import Transform
 from coremaker.tree import ChildType
 

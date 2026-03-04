@@ -13,15 +13,14 @@ from coremaker.geometries.annulus import Annulus, Ring
 from coremaker.geometries.ball import Ball, Circle
 from coremaker.geometries.box import Box, Rectangle
 from coremaker.geometries.cylinder import FiniteCylinder
-from coremaker.geometries.hex import HexPrism, Hexagon
+from coremaker.geometries.hex import Hexagon, HexPrism
 from coremaker.geometries.holed import ConcreteHoledGeometry
 from coremaker.geometries.infinite import _InfiniteGeometry
 from coremaker.geometries.union import ConcreteUnionGeometry
 from coremaker.grids import CartesianGrid, SpacedGrid
-from coremaker.protocols.grid import Lattice, Grid
-from coremaker.transform import Transform
-from coremaker.transform import identity
-from coremaker.tree import Tree, Node
+from coremaker.protocols.grid import Grid, Lattice
+from coremaker.transform import Transform, identity
+from coremaker.tree import Node, Tree
 
 
 @dispatch(Box, object)

@@ -7,7 +7,7 @@ is general enough for all known use cases.
 
 """
 from enum import Enum, auto
-from typing import Protocol, Sequence, Hashable
+from typing import Hashable, Protocol, Sequence
 
 import numpy as np
 from isotopes import ZAID, Isotope

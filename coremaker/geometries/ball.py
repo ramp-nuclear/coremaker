@@ -3,13 +3,12 @@
 """
 
 import numpy as np
-
 from ramp_core.serializable import Serializable
+
 from coremaker.geometries.box import Box
 from coremaker.surfaces.cylinder import Cylinder
 from coremaker.surfaces.sphere import Sphere
-from coremaker.surfaces.util import DECIMAL_PRECISION, comma_format, allclose, \
-    isclose
+from coremaker.surfaces.util import DECIMAL_PRECISION, allclose, comma_format, isclose
 from coremaker.transform import Transform
 from coremaker.units import cm
 

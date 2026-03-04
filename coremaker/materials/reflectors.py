@@ -1,12 +1,11 @@
 """Reflector materials
 
 """
-from isotopes import Be, C, B
+from isotopes import B, Be, C
 
 from coremaker.materials.mixture import Mixture
 from coremaker.materials.util import room_temperature
 from coremaker.protocols.mixture import Chemical
-
 
 # Taken from PNNL Compendium Rev. 2
 beryllium = Mixture({Be: 1.23487e-1}, room_temperature, (Chemical.Be,))

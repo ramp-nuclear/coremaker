@@ -1,7 +1,7 @@
 import hypothesis.strategies as st
+from conftest import cylinders, planes, spheres
 from hypothesis import given, settings
 
-from conftest import cylinders, spheres, planes
 from coremaker.surfaces.surfacecache import SurfaceCache
 
 

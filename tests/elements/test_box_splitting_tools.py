@@ -1,7 +1,6 @@
 from pathlib import PurePath
 
-from coremaker.elements.box import BoxTree, split_box_inside_tree, SplitBox, ExcludeFrame, \
-    excludeframe_to_framebox
+from coremaker.elements.box import BoxTree, ExcludeFrame, SplitBox, excludeframe_to_framebox, split_box_inside_tree
 from coremaker.materials.aluminium import al6061
 
 

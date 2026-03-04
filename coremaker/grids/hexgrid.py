@@ -1,4 +1,4 @@
-from typing import Sequence, Callable, Iterable, TypeVar, Type, Any
+from typing import Any, Callable, Iterable, Sequence, Type, TypeVar
 
 from ramp_core.serializable import Serializable, deserialize_default
 
@@ -7,15 +7,13 @@ try:
 except ImportError:
     Self = TypeVar("Self")
 
-from coremaker.grids.lattice import HexagonalLattice
 from coremaker.grids.cartgrid import alphabet, cartesian_sites
-from coremaker.grids.util import serialize_contents, deserialize_contents
-from coremaker.materials.water import make_light_water
+from coremaker.grids.lattice import HexagonalLattice
+from coremaker.grids.util import deserialize_contents, serialize_contents
 from coremaker.protocols.element import Element
 from coremaker.protocols.grid import Grid, Site
 from coremaker.protocols.mixture import Mixture
 from coremaker.units import cm
-
 
 Coords = tuple[int, int]
 _default_suffixes = tuple(str(i) for i in range(1, len(alphabet) + 1))

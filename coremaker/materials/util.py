@@ -5,7 +5,6 @@ from typing import Any, Iterable
 
 from coremaker.materials._chemical_parser import parse_chemical
 
-
 room_temperature = 20.  # deg C.
 __all__ = ['cumulative_dict', 'parse_chemical', 'room_temperature']
 

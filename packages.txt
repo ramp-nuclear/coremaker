@@ -1,2 +1,0 @@
-isotopes.git@dev#egg=isotopes
-don't forger ramp_core

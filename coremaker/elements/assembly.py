@@ -8,7 +8,7 @@ from coremaker.geometries.infinite import infiniteGeometry
 from coremaker.materials import Mixture
 from coremaker.protocols.geometry import Geometry
 from coremaker.transform import Transform, identity
-from coremaker.tree import Tree, Node, ChildType
+from coremaker.tree import ChildType, Node, Tree
 
 Factory = Callable[[], Tree]
 FactorySpec = tuple[Factory, Transform, str]

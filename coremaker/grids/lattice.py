@@ -1,4 +1,4 @@
-from typing import Callable, Any, Type, TypeVar
+from typing import Any, Callable, Type, TypeVar
 
 try:
     from typing import Self
@@ -8,7 +8,7 @@ except ImportError:
 import numpy as np
 from ramp_core.serializable import Serializable, deserialize_default
 
-from coremaker.geometries import Box, Rectangle, FiniteCylinder, HexPrism
+from coremaker.geometries import Box, FiniteCylinder, HexPrism, Rectangle
 from coremaker.materials.mixture import Mixture as ConcMixture
 from coremaker.protocols.grid import Lattice
 from coremaker.protocols.mixture import Mixture

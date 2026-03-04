@@ -1,7 +1,8 @@
 """A concrete implementation of the holed geometry protocol
 
 """
-from typing import Sequence, Any, Type, TypeVar
+from typing import Any, Sequence, Type, TypeVar
+
 try:
     from typing import Self
 except ImportError:

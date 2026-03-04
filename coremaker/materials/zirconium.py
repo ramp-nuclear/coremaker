@@ -1,11 +1,10 @@
 """Zirconium based standard materials
 
 """
-from isotopes import O, Cr, Fe, Ni, Sn, Zr
+from isotopes import Cr, Fe, Ni, O, Sn, Zr
 
 from coremaker.materials.mixture import Mixture
 from coremaker.materials.util import room_temperature
-
 
 # Taken from PNNL Compendium Rev 2
 zircalloy_2 = Mixture({O: 2.96e-4, Cr: 7.6e-5, Fe: 7.1e-5, Ni: 3.4e-5,

@@ -1,10 +1,11 @@
 """Coordinate transformation object. Used for translation and rotation of other objects in 3D space.
 
 """
-from typing import Tuple, TypeVar, Union, Any
+from typing import Any, Tuple, TypeVar, Union
 
 import numpy as np
-from scipy.sparse import csr_matrix, identity as iden
+from scipy.sparse import csr_matrix
+from scipy.sparse import identity as iden
 from scipy.spatial.transform import Rotation
 
 PRECISION = 6

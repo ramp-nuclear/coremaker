@@ -10,13 +10,13 @@ import pytest
 from hypothesis import given
 from hypothesis.extra.numpy import arrays
 
-from coremaker.elements.box import ExcludeFrame, BoxTree
+from coremaker.elements.box import BoxTree, ExcludeFrame
 from coremaker.geometries.box import Box
 from coremaker.materials.aluminium import al1050
 from coremaker.materials.steel import steel_304L
 from coremaker.plane_intersection import intersect_tree
 from coremaker.transform import Transform, identity, rotate180
-from coremaker.tree import _switch, ChildType, Tree
+from coremaker.tree import ChildType, Tree, _switch
 
 
 @pytest.mark.parametrize(

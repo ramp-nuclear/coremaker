@@ -8,7 +8,7 @@ from ramp_core.serializable import Serializable
 
 from coremaker.geometries.box import Box
 from coremaker.surfaces.plane import Plane
-from coremaker.surfaces.util import allclose, isclose, comma_format
+from coremaker.surfaces.util import allclose, comma_format, isclose
 from coremaker.transform import Transform
 from coremaker.units import cm
 

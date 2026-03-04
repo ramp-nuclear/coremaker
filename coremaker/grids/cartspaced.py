@@ -1,5 +1,5 @@
-from itertools import product, pairwise
-from typing import Iterable, Sequence, Type, TypeVar, Any
+from itertools import pairwise, product
+from typing import Any, Iterable, Sequence, Type, TypeVar
 
 from ramp_core.serializable import Serializable, deserialize_default
 
@@ -12,9 +12,9 @@ import numpy as np
 from more_itertools import prepend
 from numpy import append
 
-from coremaker.grids.lattice import CartesianLattice
-from coremaker.grids.util import serialize_contents, deserialize_contents
 from coremaker.grids.cartgrid import CartesianGrid, alphabet, cartesian_sites
+from coremaker.grids.lattice import CartesianLattice
+from coremaker.grids.util import deserialize_contents, serialize_contents
 from coremaker.protocols.element import Element
 from coremaker.protocols.grid import Grid, Site
 from coremaker.protocols.mixture import Mixture

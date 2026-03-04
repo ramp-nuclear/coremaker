@@ -1,11 +1,10 @@
 """Common absorber materials for reactors.
 
 """
-from isotopes import Hf, Zr, Ag, In, Cd, C, B
+from isotopes import Ag, B, C, Cd, Hf, In, Zr
 
 from coremaker.materials.mixture import Mixture
 from coremaker.materials.util import room_temperature
-
 
 # Taken from OPAL Specification
 hafnium = Mixture.alloy(Hf, {Zr: 2.14e-2}, density=12.9,

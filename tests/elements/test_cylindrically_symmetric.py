@@ -7,10 +7,17 @@ from hypothesis import given
 from hypothesis.extra.numpy import arrays
 
 from coremaker.elements.cylindrically_symmetric import (
-    radial_split, axial_split, _piece_centers, ChunkedCylinderTree,
-    ChunkedAnnulusTree, FiniteCylinder, appropriate_radial_resolution,
-    _splits_num, appropriate_axial_resolution, UnequallyChunkedCylinderTree,
+    ChunkedAnnulusTree,
+    ChunkedCylinderTree,
+    FiniteCylinder,
     UnequallyChunkedAnnulusTree,
+    UnequallyChunkedCylinderTree,
+    _piece_centers,
+    _splits_num,
+    appropriate_axial_resolution,
+    appropriate_radial_resolution,
+    axial_split,
+    radial_split,
 )
 from coremaker.elements.util import split
 from coremaker.geometries.annulus import Annulus

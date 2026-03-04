@@ -24,7 +24,8 @@ path within the element at the site to the component.
 
 """
 from pathlib import PurePath
-from typing import Optional, Iterable, Any, Type, TypeVar
+from typing import Any, Iterable, Optional, Type, TypeVar
+
 try:
     from typing import Self
 except ImportError:
@@ -33,7 +34,8 @@ except ImportError:
 from ramp_core.serializable import Serializable, deserialize_default
 
 from coremaker.geometries.union import ConcreteUnionGeometry
-from coremaker.protocols.core import Core as CoreProtocol, AliasMap, Site
+from coremaker.protocols.core import AliasMap, Site
+from coremaker.protocols.core import Core as CoreProtocol
 from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.grid import Grid, Lattice
 from coremaker.protocols.node import NodeLike

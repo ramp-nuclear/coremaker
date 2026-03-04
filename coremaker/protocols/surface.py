@@ -7,7 +7,7 @@ Thus, the :ref:`surfaces` subpackage of CoreMaker is also considered public API,
 It is still best to make those specific assumptions as local as possible, so new and exciting surfaces can be used.
 
 """
-from typing import Protocol, Hashable
+from typing import Hashable, Protocol
 
 from ramp_core.serializable import Serializable
 
