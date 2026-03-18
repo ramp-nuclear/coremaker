@@ -15,22 +15,16 @@ from coremaker.transform import Transform
 
 @runtime_checkable
 class Geometry(Serializable, Hashable, Protocol):
-    """A protocol for anything to be considered a geometry for the purposes of defining objects
-
-    """
+    """A protocol for anything to be considered a geometry for the purposes of defining objects"""
 
     @property
     def surfaces(self) -> Sequence[Surface]:
-        """A property to get a sequence of all the surfaces that make up the geometry.
-
-        """
+        """A property to get a sequence of all the surfaces that make up the geometry."""
         return ()
 
     @property
     def volume(self) -> float | None:
-        """The volume within the geometry.
-
-        """
+        """The volume within the geometry."""
         return None
 
     def transform(self, transform: Transform) -> "Geometry":
@@ -63,16 +57,12 @@ class HoledGeometry(Serializable, Protocol):
 
     @property
     def volume(self) -> float | None:
-        """The volume within the geometry.
-
-        """
+        """The volume within the geometry."""
         raise NotImplementedError("Not implemented at the protocol level.")
 
     @property
     def surfaces(self) -> Sequence[Surface]:
-        """Return a list of all surfaces, exclusive or inclusive.
-
-        """
+        """Return a list of all surfaces, exclusive or inclusive."""
         raise NotImplementedError("Not implemented at the protocol level")
 
     def __sub__(self, other: Geometry) -> "HoledGeometry":
@@ -92,9 +82,7 @@ class HoledGeometry(Serializable, Protocol):
 
 @runtime_checkable
 class UnionGeometry(Serializable, Protocol):
-    """A geometry that is defined as any area within the union of some geometries
-
-    """
+    """A geometry that is defined as any area within the union of some geometries"""
 
     geometries: Sequence[Geometry]
 
@@ -105,9 +93,7 @@ class UnionGeometry(Serializable, Protocol):
 
     @property
     def surfaces(self) -> list[Surface]:
-        """Return a list of all surfaces, regardless of whom they belong to.
-
-        """
+        """Return a list of all surfaces, regardless of whom they belong to."""
         raise NotImplementedError("Not implemented at the protocol level.")
 
     def transform(self, transform: Transform) -> "UnionGeometry":

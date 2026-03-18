@@ -3,6 +3,7 @@ file that contains tools to intersect 3d objects with a plane parallel to the xy
 This is useful when a simplification of the geometry is desired, for example when modeling unit cells for
 cross-section generation. This can also be used for 2d-1d solvers.
 """
+
 from typing import NoReturn
 
 import numpy as np
@@ -25,12 +26,10 @@ from coremaker.tree import Node, Tree
 
 @dispatch(Box, object)
 def intersect_geometry(geo: Box, z0: float) -> Rectangle | None:
-    minv, maxv = (geo.center[2] - geo.dimensions[2] / 2,
-                  geo.center[2] + geo.dimensions[2] / 2)
+    minv, maxv = (geo.center[2] - geo.dimensions[2] / 2, geo.center[2] + geo.dimensions[2] / 2)
     if not minv < z0 < maxv:
         return None
-    return Rectangle(center=(0, 0), dimensions=geo.dimensions[:2],
-                     transform=restrict_transform(geo.transform_))
+    return Rectangle(center=(0, 0), dimensions=geo.dimensions[:2], transform=restrict_transform(geo.transform_))
 
 
 @dispatch(ConcreteUnionGeometry, object)
@@ -43,7 +42,7 @@ def intersect_geometry(geo: ConcreteUnionGeometry, z0: float) -> ConcreteUnionGe
 def intersect_geometry(geo: Ball, z0: float) -> Circle | None:
     if np.abs(geo.center[2] - z0) > geo.radius:
         return None
-    r = np.sqrt(geo.radius ** 2 - (z0 - geo.center[2]) ** 2)
+    r = np.sqrt(geo.radius**2 - (z0 - geo.center[2]) ** 2)
     return Circle(geo.center[:2], r)
 
 
@@ -64,13 +63,9 @@ def intersect_geometry(geo: ConcreteHoledGeometry, z0: float) -> ConcreteHoledGe
     geo_2d = intersect_geometry(geo.inclusive, z0)
     if not geo_2d:
         return None
-    internal_exclusive_2d = [hole_2d for hole in geo.internal_exclusives
-                             if (hole_2d := intersect_geometry(hole, z0))]
-    external_exclusive_2d = [hole_2d for hole in geo.external_exclusives
-                             if (hole_2d := intersect_geometry(hole, z0))]
-    return ConcreteHoledGeometry(geo_2d,
-                                 internal_exclusive_2d,
-                                 external_exclusive_2d)
+    internal_exclusive_2d = [hole_2d for hole in geo.internal_exclusives if (hole_2d := intersect_geometry(hole, z0))]
+    external_exclusive_2d = [hole_2d for hole in geo.external_exclusives if (hole_2d := intersect_geometry(hole, z0))]
+    return ConcreteHoledGeometry(geo_2d, internal_exclusive_2d, external_exclusive_2d)
 
 
 @dispatch(FiniteCylinder, object)
@@ -78,8 +73,7 @@ def intersect_geometry(geo: FiniteCylinder, z0: float) -> Circle | None:
     if not np.allclose(geo.axis[:-1], np.zeros(2)):
         if np.abs(z0 - geo.center[2]) > geo.radius:
             return None
-        raise NotImplementedError(
-            "Intersecting cylinders not perpendicular to the plane is not supported yet")
+        raise NotImplementedError("Intersecting cylinders not perpendicular to the plane is not supported yet")
     if geo.center[2] - geo.length / 2 < z0 < geo.center[2] + geo.length / 2:
         return Circle(geo.center[:2], geo.radius)
     return None
@@ -90,8 +84,7 @@ def intersect_geometry(geo: Annulus, z0: float) -> Ring | None:
     if not np.allclose(geo.axis[:-1], np.zeros(2)):
         if np.abs(z0 - geo.center[2]) > geo.outer_radius:
             return None
-        raise NotImplementedError(
-            "Intersecting cylinders not perpendicular to the plane is not supported yet")
+        raise NotImplementedError("Intersecting cylinders not perpendicular to the plane is not supported yet")
     if geo.center[2] - geo.length / 2 < z0 < geo.center[2] + geo.length / 2:
         return Ring(geo.center[:2], geo.inner_radius, geo.outer_radius)
     return None
@@ -99,14 +92,16 @@ def intersect_geometry(geo: Annulus, z0: float) -> Ring | None:
 
 @dispatch(object, object)
 def intersect_geometry(g: object, z0: float) -> NoReturn:
-    raise NotImplementedError("Geometry intersection isn't available for geometries of "
-                              f"type {type(g)}. Tried to intersect {g}")
+    raise NotImplementedError(
+        f"Geometry intersection isn't available for geometries of type {type(g)}. Tried to intersect {g}"
+    )
 
 
 @dispatch(object, object)
 def intersect_geometry(g: object, z0: float) -> NoReturn:
-    raise NotImplementedError("Geometry intersection isn't available for geometries of "
-                              f"type {type(g)}. Tried to intersect {g}")
+    raise NotImplementedError(
+        f"Geometry intersection isn't available for geometries of type {type(g)}. Tried to intersect {g}"
+    )
 
 
 def intersect_tree(element: Tree, z0: float) -> Tree:
@@ -128,19 +123,18 @@ def intersect_tree(element: Tree, z0: float) -> Tree:
     memdict = {}
     result = Tree()
     for path, node in element.nodes.items():
-        if dim2geometry := intersect_geometry(node.geometry.transform(element.get_transform(path, memdict)),
-                                              z0):
+        if dim2geometry := intersect_geometry(node.geometry.transform(element.get_transform(path, memdict)), z0):
             if isinstance(node, Lattice):
                 result.nodes[path] = node
             else:
                 result.nodes[path] = Node(dim2geometry, identity, mixture=node.mixture)
     for element_edges, result_edges in zip(
-            [element.inclusive, element.exclusive, element.external_exclusive],
-            [result.inclusive, result.exclusive, result.external_exclusive]):
+        [element.inclusive, element.exclusive, element.external_exclusive],
+        [result.inclusive, result.exclusive, result.external_exclusive],
+    ):
         for path, nodes in element_edges.items():
             if path in result.nodes:
-                result_edges[path] = [(node[0], result[node[0]]) for node in nodes if
-                                      node[0] in result.nodes]
+                result_edges[path] = [(node[0], result[node[0]]) for node in nodes if node[0] in result.nodes]
     return result
 
 
@@ -161,9 +155,14 @@ def intersect_grid(grid: CartesianGrid, z0: float) -> CartesianGrid:
     -------
     CartesianGrid
     """
-    return CartesianGrid(grid.lattice.origin, grid.lattice.shape, grid.lattice.dimensions, None,
-                         grid.lattice.mixture,
-                         {site: intersect_tree(rod, z0) for site, rod in grid.contents.items()})
+    return CartesianGrid(
+        grid.lattice.origin,
+        grid.lattice.shape,
+        grid.lattice.dimensions,
+        None,
+        grid.lattice.mixture,
+        {site: intersect_tree(rod, z0) for site, rod in grid.contents.items()},
+    )
 
 
 @dispatch(SpacedGrid, object)
@@ -184,9 +183,16 @@ def intersect_grid(grid: SpacedGrid, z0: float) -> SpacedGrid:
     SpacedGrid
     """
     center = sum(lat.origin / 4 for lat in grid.lattices)
-    return SpacedGrid(tuple(center), (grid.shape[0] * 2, grid.shape[1] * 2), grid.lattices[0].dimensions, None,
-                      grid.space_dx, grid.space_dy, grid.lattices[0].mixture,
-                      {site: intersect_tree(rod, z0) for site, rod in grid.contents.items()})
+    return SpacedGrid(
+        tuple(center),
+        (grid.shape[0] * 2, grid.shape[1] * 2),
+        grid.lattices[0].dimensions,
+        None,
+        grid.space_dx,
+        grid.space_dy,
+        grid.lattices[0].mixture,
+        {site: intersect_tree(rod, z0) for site, rod in grid.contents.items()},
+    )
 
 
 @dispatch(object, object)
@@ -195,8 +201,9 @@ def intersect_grid(grid: Grid, z0: float) -> NoReturn:
     function to intersect a grid. The function intersects all the lattices and all the rods
     of the grid.
     """
-    raise NotImplementedError("Grid intersection isn't available for grids of "
-                              f"type {type(grid)}. Tried to intersect {grid}")
+    raise NotImplementedError(
+        f"Grid intersection isn't available for grids of type {type(grid)}. Tried to intersect {grid}"
+    )
 
 
 def restrict_transform(transform: Transform) -> Transform:
@@ -246,5 +253,4 @@ def intersect_core(core: Core, z0: float) -> Core:
             for lattice in grid_2d.lattices:
                 if np.all(lattice.origin == node.origin):
                     core_tree.nodes[path] = lattice
-    return Core(grid_2d, core.aliases, core_tree,
-                intersect_geometry(core.outer_geometry, z0))
+    return Core(grid_2d, core.aliases, core_tree, intersect_geometry(core.outer_geometry, z0))

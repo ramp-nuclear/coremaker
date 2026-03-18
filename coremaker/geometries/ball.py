@@ -1,6 +1,4 @@
-"""A geometry representation of a ball.
-
-"""
+"""A geometry representation of a ball."""
 
 import numpy as np
 from ramp_core.serializable import Serializable
@@ -14,8 +12,7 @@ from coremaker.units import cm
 
 
 class Ball(Serializable):
-    """A ball shape.
-    """
+    """A ball shape."""
 
     ser_identifier = "Ball"
 
@@ -34,16 +31,15 @@ class Ball(Serializable):
 
     @property
     def surfaces(self) -> tuple[Sphere]:
-        return Sphere(self.center, self.radius, inside=True),
+        return (Sphere(self.center, self.radius, inside=True),)
 
     @property
     def volume(self) -> float:
-        return 4 * np.pi / 3 * self.radius ** 3
+        return 4 * np.pi / 3 * self.radius**3
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Ball):
-            return (allclose(self.center, other.center) and
-                    isclose(self.radius, other.radius))
+            return allclose(self.center, other.center) and isclose(self.radius, other.radius)
         return NotImplemented
 
     def __hash__(self):
@@ -82,16 +78,15 @@ class Circle(Serializable):
 
     @property
     def surfaces(self) -> tuple[Cylinder]:
-        return Cylinder(tuple(np.hstack([self.center, [0]])), self.radius, (0, 0, 1), inside=True),
+        return (Cylinder(tuple(np.hstack([self.center, [0]])), self.radius, (0, 0, 1), inside=True),)
 
     @property
     def volume(self) -> float:
-        return np.pi * self.radius ** 2
+        return np.pi * self.radius**2
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Circle):
-            return (allclose(self.center, other.center) and
-                    isclose(self.radius, other.radius))
+            return allclose(self.center, other.center) and isclose(self.radius, other.radius)
         return NotImplemented
 
     __hash__ = Ball.__hash__

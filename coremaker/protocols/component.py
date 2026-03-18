@@ -15,5 +15,6 @@ class Component(Protocol, Hashable):
         The external surfaces of this component, after holes are taken into account.
 
     """
+
     mixture: Mixture
     geometry: HoledGeometry | Geometry | UnionGeometry

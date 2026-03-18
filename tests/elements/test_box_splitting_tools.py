@@ -15,12 +15,24 @@ def test_split_box_same_as_splitbox():
 
 
 def test_split_excludedframe_same_as_framebox():
-    box1 = ExcludeFrame(frame_name=PurePath("Frame"), picture_name=PurePath("Picture"),
-                        frame_mixture=al6061, frame_dimensions=(1, 1, 1), picture_mixture=al6061,
-                        picture_dimensions=(0.5, 0.5, 0.5), picture_translation=(0.1, 0.1, 0.1))
-    box2 = ExcludeFrame(frame_name=PurePath("Frame"), picture_name=PurePath("Picture"),
-                        frame_mixture=al6061, frame_dimensions=(1, 1, 1), picture_mixture=al6061,
-                        picture_dimensions=(0.5, 0.5, 0.5), picture_translation=(0.1, 0.1, 0.1))
+    box1 = ExcludeFrame(
+        frame_name=PurePath("Frame"),
+        picture_name=PurePath("Picture"),
+        frame_mixture=al6061,
+        frame_dimensions=(1, 1, 1),
+        picture_mixture=al6061,
+        picture_dimensions=(0.5, 0.5, 0.5),
+        picture_translation=(0.1, 0.1, 0.1),
+    )
+    box2 = ExcludeFrame(
+        frame_name=PurePath("Frame"),
+        picture_name=PurePath("Picture"),
+        frame_mixture=al6061,
+        frame_dimensions=(1, 1, 1),
+        picture_mixture=al6061,
+        picture_dimensions=(0.5, 0.5, 0.5),
+        picture_translation=(0.1, 0.1, 0.1),
+    )
     split_box_inside_tree(box1, box_path=PurePath("Frame"), resolution=(0.1, 0.1, 0.1))
     split_box = excludeframe_to_framebox(box2, PurePath("Picture"), (0.1, 0.1, 0.1))
     assert len(set(split_box.nodes.keys()).symmetric_difference(box1.nodes.keys())) == 1

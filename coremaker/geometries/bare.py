@@ -2,6 +2,7 @@
 representations
 
 """
+
 from dataclasses import dataclass
 from itertools import chain
 from typing import Any, ClassVar, Sequence, Type, TypeVar
@@ -54,9 +55,7 @@ class BareGeometry:
             Transform to apply on the surfaces
 
         """
-        return BareGeometry(
-            [s.transform(transform) for s in self._surfaces], _volume=self._volume
-        )
+        return BareGeometry([s.transform(transform) for s in self._surfaces], _volume=self._volume)
 
     def __and__(self, other: Geometry) -> "BareGeometry":
         return BareGeometry(list(chain(self._surfaces, other.surfaces)))
@@ -73,14 +72,15 @@ class BareGeometry:
         return hash((tuple(self.surfaces), self.volume))
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
-        return self.ser_identifier, {"surfaces": [s.serialize() for s in self._surfaces],
-                                     "volume": self._volume}
+        return self.ser_identifier, {"surfaces": [s.serialize() for s in self._surfaces], "volume": self._volume}
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
         # We assume the data given is actually made up of surfaces, so we can ignore the typing for surfaces
-        return cls(tuple(deserialize_default(t, supported=supported) for t in d["surfaces"]),  # type: ignore
-                   d["volume"])
+        return cls(
+            tuple(deserialize_default(t, supported=supported) for t in d["surfaces"]),  # type: ignore
+            d["volume"],
+        )
 
     def __repr__(self) -> str:
         return f"BareGeometry<{tuple(self.surfaces)}>"

@@ -1,6 +1,4 @@
-"""Module to create a pyparsing parser for chemical formulae.
-
-"""
+"""Module to create a pyparsing parser for chemical formulae."""
 
 from collections import defaultdict
 from typing import Sequence
@@ -8,7 +6,7 @@ from typing import Sequence
 from isotopes import Isotope
 from pyparsing import Forward, Group, OneOrMore, Optional, ParseResults, Suppress, Word, alphas, nums
 
-__all__ = ['parse_chemical']
+__all__ = ["parse_chemical"]
 
 _LPAR, _RPAR = map(Suppress, "()")
 _integer = Word(nums)
@@ -16,8 +14,7 @@ _integer.set_parse_action(lambda t: int(t[0]))  # Parse time conversion to int
 _element = Word(alphas.upper(), alphas.lower())
 
 _formula = Forward()
-_term = Group((_element | Group(_LPAR + _formula + _RPAR)("subgroup")) +
-              Optional(_integer, default=1)("mult"))
+_term = Group((_element | Group(_LPAR + _formula + _RPAR)("subgroup")) + Optional(_integer, default=1)("mult"))
 _formula << OneOrMore(_term)
 
 

@@ -1,6 +1,5 @@
-"""Tests for different geometries
+"""Tests for different geometries"""
 
-"""
 from copy import copy
 from math import pi
 
@@ -39,18 +38,20 @@ ORIGIN = (0.0, 0.0, 0.0)
 
 
 @pytest.mark.parametrize(
-    'geo',
-    [Annulus(ORIGIN, 1., 2., 1., (0.0, 0.0, 1.0)),
-     Ball(ORIGIN, 1.),
-     BareGeometry([]),
-     Box(ORIGIN, (1., 1., 1.)),
-     FiniteCylinder(ORIGIN, 1., 1., (0.0, 0.0, 1.0)),
-     HexPrism(ORIGIN, 1., 1.),
-     infiniteGeometry,
-     Rectangle(ORIGIN[:2], (1.,) * 2),
-     Ring(ORIGIN[:2], 1, 2),
-     Circle(ORIGIN[:2], 1)
-     ])
+    "geo",
+    [
+        Annulus(ORIGIN, 1.0, 2.0, 1.0, (0.0, 0.0, 1.0)),
+        Ball(ORIGIN, 1.0),
+        BareGeometry([]),
+        Box(ORIGIN, (1.0, 1.0, 1.0)),
+        FiniteCylinder(ORIGIN, 1.0, 1.0, (0.0, 0.0, 1.0)),
+        HexPrism(ORIGIN, 1.0, 1.0),
+        infiniteGeometry,
+        Rectangle(ORIGIN[:2], (1.0,) * 2),
+        Ring(ORIGIN[:2], 1, 2),
+        Circle(ORIGIN[:2], 1),
+    ],
+)
 def test_example_geometry_is_considered_a_geometry(geo):
     assert isinstance(geo, Geometry), type(geo)
 
@@ -74,7 +75,7 @@ def test_box_creation_from_vertices_same_as_dimensions_and_center(vertices):
 @given(posfloats, posfloats)
 def test_annulus_defends_against_illegal_radii(inner, dr):
     with pytest.raises(ValueError):
-        Annulus((0.0, 0.0, 0.0), inner, inner - dr, 1., (0.0, 0.0, 1.0))
+        Annulus((0.0, 0.0, 0.0), inner, inner - dr, 1.0, (0.0, 0.0, 1.0))
 
 
 @given(st.one_of(finitecylinders, annuli), st.floats(0.0, 2 * pi))
@@ -89,10 +90,10 @@ def test_cylinder_annulus_rotation_around_axis_is_meaningless(s, angle):
 @given(annuli, transforms)
 def test_transform_of_annulus_does_not_change_its_dimensions(annulus, trans):
     rotated = annulus.transform(trans)
-    assert all(np.isclose(getattr(annulus, d),
-                          getattr(rotated, d),
-                          atol=1e-10, rtol=1e-10)
-               for d in ['inner_radius', 'outer_radius', 'length'])
+    assert all(
+        np.isclose(getattr(annulus, d), getattr(rotated, d), atol=1e-10, rtol=1e-10)
+        for d in ["inner_radius", "outer_radius", "length"]
+    )
 
 
 @given(st.one_of(finitecylinders, annuli), medfloats.filter(lambda x: abs(x) > 1e-3))
@@ -105,21 +106,21 @@ def test_axis_of_cylinder_annulus_is_same_upto_different_axis_length(s, factor):
 @given(finitecylinders, transforms)
 def test_transform_of_cylinder_does_not_change_its_dimensions(cylinder, trans):
     rotated = cylinder.transform(trans)
-    assert all(np.isclose(getattr(cylinder, d),
-                          getattr(rotated, d),
-                          atol=1e-10, rtol=1e-10)
-               for d in ['radius', 'length'])
+    assert all(
+        np.isclose(getattr(cylinder, d), getattr(rotated, d), atol=1e-10, rtol=1e-10) for d in ["radius", "length"]
+    )
 
 
 @given(hexprisms, translations)
 def test_transform_of_hexprisms_does_not_change_their_dimensions(hexa, trans):
     translated = hexa.transform(trans)
-    assert all(np.isclose(getattr(hexa, d), getattr(translated, d), atol=1e-10, rtol=1e-10)
-               for d in ["pitch", "height"])
+    assert all(
+        np.isclose(getattr(hexa, d), getattr(translated, d), atol=1e-10, rtol=1e-10) for d in ["pitch", "height"]
+    )
 
 
 example_prism = HexPrism((0, 0, 0), 5, 2)
-hexy = np.sqrt(3.) / 2
+hexy = np.sqrt(3.0) / 2
 
 
 @given(points)
@@ -139,40 +140,71 @@ def test_hexprism_raises_for_rotation(rotation):
 
 
 @pytest.mark.parametrize(
-    ('geo', 'surfaces'),
-    [(Annulus((1, 0, 0), 1., 2., 4., (0.0, 0.0, 1.0)),
-      (Plane(0, 0, 1, -2), -Plane(0, 0, 1, 2),
-       Cylinder((1., 0.0, 0.0), 1., (0.0, 0.0, 1.0), inside=False),
-       Cylinder((1., 0.0, 0.0), 2., (0.0, 0.0, 1.0), inside=True))),
-     (Ball((1, 0, 0), 3.),
-      (Sphere((1.0, 0.0, 0.0), 3., inside=True),)),
-     (Box((1, 0, 0), (1, 2, 3)),
-      (Plane(1, 0, 0, 0.5), -Plane(1, 0, 0, 1.5),
-       Plane(0, 1, 0, -1), -Plane(0, 1, 0, 1),
-       Plane(0, 0, 1, -1.5), -Plane(0, 0, 1, 1.5))),
-     (Box((0, 0, 0), (1, 2, 3),
-          Transform((1., 0., 0.)) @ counterclockwise_90deg),
-      (Plane(1, 0, 0, 0), -Plane(1, 0, 0, 2),
-       Plane(0, 1, 0, -0.5), -Plane(0, 1, 0, 0.5),
-       Plane(0, 0, 1, -1.5), -Plane(0, 0, 1, 1.5))),
-     (FiniteCylinder((1.0, 0.0, 0.0), 1., 1., (0.0, 0.0, 1.0)),
-      (Plane(0, 0, 1, -0.5), -Plane(0, 0, 1, 0.5),
-       Cylinder((1., 0.0, 0.0), 1., (0.0, 0.0, 1.0), inside=True))),
-     (infiniteGeometry, tuple()),
-     (Circle((1, 0), 3.), (Cylinder((1.0, 0, 0), 3., (0, 0, 1), inside=True),)),
-     (Rectangle((1, 0), (1, 2)),
-      (Plane(1, 0, 0, 0.5), -Plane(1, 0, 0, 1.5),
-       Plane(0, 1, 0, -1), -Plane(0, 1, 0, 1))),
-     (Ring((1, 0), 1., 2.),
-      (Cylinder((1., 0.0, 0.0), 1., (0.0, 0.0, 1.0), inside=False),
-       Cylinder((1., 0.0, 0.0), 2., (0.0, 0.0, 1.0), inside=True))),
-     (HexPrism((1., 0., 0.), 6., 2.),
-      (Plane(1, 0, 0, -2), -Plane(1, 0, 0, 4),
-       Plane(0.5, hexy, 0, -2.5), Plane(0.5, -hexy, 0, -2.5),
-       -Plane(0.5, hexy, 0, 3.5), -Plane(0.5, -hexy, 0, 3.5),
-       Plane(0, 0, 1, -1), -Plane(0, 0, 1, 1)
-       )),
-     ]
+    ("geo", "surfaces"),
+    [
+        (
+            Annulus((1, 0, 0), 1.0, 2.0, 4.0, (0.0, 0.0, 1.0)),
+            (
+                Plane(0, 0, 1, -2),
+                -Plane(0, 0, 1, 2),
+                Cylinder((1.0, 0.0, 0.0), 1.0, (0.0, 0.0, 1.0), inside=False),
+                Cylinder((1.0, 0.0, 0.0), 2.0, (0.0, 0.0, 1.0), inside=True),
+            ),
+        ),
+        (Ball((1, 0, 0), 3.0), (Sphere((1.0, 0.0, 0.0), 3.0, inside=True),)),
+        (
+            Box((1, 0, 0), (1, 2, 3)),
+            (
+                Plane(1, 0, 0, 0.5),
+                -Plane(1, 0, 0, 1.5),
+                Plane(0, 1, 0, -1),
+                -Plane(0, 1, 0, 1),
+                Plane(0, 0, 1, -1.5),
+                -Plane(0, 0, 1, 1.5),
+            ),
+        ),
+        (
+            Box((0, 0, 0), (1, 2, 3), Transform((1.0, 0.0, 0.0)) @ counterclockwise_90deg),
+            (
+                Plane(1, 0, 0, 0),
+                -Plane(1, 0, 0, 2),
+                Plane(0, 1, 0, -0.5),
+                -Plane(0, 1, 0, 0.5),
+                Plane(0, 0, 1, -1.5),
+                -Plane(0, 0, 1, 1.5),
+            ),
+        ),
+        (
+            FiniteCylinder((1.0, 0.0, 0.0), 1.0, 1.0, (0.0, 0.0, 1.0)),
+            (Plane(0, 0, 1, -0.5), -Plane(0, 0, 1, 0.5), Cylinder((1.0, 0.0, 0.0), 1.0, (0.0, 0.0, 1.0), inside=True)),
+        ),
+        (infiniteGeometry, tuple()),
+        (Circle((1, 0), 3.0), (Cylinder((1.0, 0, 0), 3.0, (0, 0, 1), inside=True),)),
+        (
+            Rectangle((1, 0), (1, 2)),
+            (Plane(1, 0, 0, 0.5), -Plane(1, 0, 0, 1.5), Plane(0, 1, 0, -1), -Plane(0, 1, 0, 1)),
+        ),
+        (
+            Ring((1, 0), 1.0, 2.0),
+            (
+                Cylinder((1.0, 0.0, 0.0), 1.0, (0.0, 0.0, 1.0), inside=False),
+                Cylinder((1.0, 0.0, 0.0), 2.0, (0.0, 0.0, 1.0), inside=True),
+            ),
+        ),
+        (
+            HexPrism((1.0, 0.0, 0.0), 6.0, 2.0),
+            (
+                Plane(1, 0, 0, -2),
+                -Plane(1, 0, 0, 4),
+                Plane(0.5, hexy, 0, -2.5),
+                Plane(0.5, -hexy, 0, -2.5),
+                -Plane(0.5, hexy, 0, 3.5),
+                -Plane(0.5, -hexy, 0, 3.5),
+                Plane(0, 0, 1, -1),
+                -Plane(0, 0, 1, 1),
+            ),
+        ),
+    ],
 )
 def test_geometry_surfaces_by_example(geo, surfaces):
     assert sum(s1.isclose(s2) for s1 in geo.surfaces for s2 in surfaces) == len(surfaces)
@@ -184,12 +216,15 @@ def test_geometry_surfaces_hashable(geom: Geometry):
 
 
 @pytest.mark.parametrize(
-    'geo',
-    [Annulus((1, 0, 0), 1., 2., 4., (0, 0, 1)),
-     Ball((1, 0, 0), 3.),
-     Box((1, 0, 0), (1, 2, 3)),
-     Box((0, 0, 0), (1, 2, 3)),
-     FiniteCylinder((1, 0, 0), 1., 1., (0, 0, 1))])
+    "geo",
+    [
+        Annulus((1, 0, 0), 1.0, 2.0, 4.0, (0, 0, 1)),
+        Ball((1, 0, 0), 3.0),
+        Box((1, 0, 0), (1, 2, 3)),
+        Box((0, 0, 0), (1, 2, 3)),
+        FiniteCylinder((1, 0, 0), 1.0, 1.0, (0, 0, 1)),
+    ],
+)
 def test_intersection_of_geometry_and_plane_is_empty_when_it_should_be(geo):
     assert intersect_geometry(geo, 0.3)
     assert intersect_geometry(geo, 10) is None

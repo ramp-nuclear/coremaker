@@ -1,6 +1,5 @@
-"""The Protocol that defines what a grid has to do to be a grid.
+"""The Protocol that defines what a grid has to do to be a grid."""
 
-"""
 from abc import abstractmethod
 from typing import Hashable, Iterable, Protocol, Sequence, runtime_checkable
 
@@ -12,7 +11,7 @@ from coremaker.protocols.geometry import Geometry
 from coremaker.protocols.mixture import Mixture
 from coremaker.protocols.node import NodeLike
 
-__all__ = ['Lattice', 'Grid', 'Site']
+__all__ = ["Lattice", "Grid", "Site"]
 
 
 Site = str
@@ -29,13 +28,12 @@ class Lattice(NodeLike, Hashable, Protocol):
     is probably not viable in any engineering sense or for most transport codes.
 
     """
+
     mixture: Mixture
 
     @property
     def shape(self) -> tuple[int, ...]:
-        """The shape of the lattice when encoded as a tuple of integers.
-
-        """
+        """The shape of the lattice when encoded as a tuple of integers."""
         raise NotImplementedError("This is not supported at the protocol level")
 
     @property
@@ -66,9 +64,7 @@ class Lattice(NodeLike, Hashable, Protocol):
 
     @property
     def inner_geometry(self) -> Geometry:
-        """The outer geometry of each tile in the lattice.
-
-        """
+        """The outer geometry of each tile in the lattice."""
         raise NotImplementedError("This is not supported at the protocol level")
 
 
@@ -159,22 +155,18 @@ class Grid(Serializable, Protocol):
 
     @abstractmethod
     def keys(self) -> Iterable[Site]:
-        """Same as a dictionary's keys method. Keys are occupied sites.
-        """
+        """Same as a dictionary's keys method. Keys are occupied sites."""
         raise NotImplementedError("The protocol doesn't support this directly.")
 
     @abstractmethod
     def values(self) -> Iterable[Element]:
-        """Same as a dictionary's values method.
-
-        """
+        """Same as a dictionary's values method."""
         raise NotImplementedError("The protocol doesn't support this directly.")
 
     @abstractmethod
     def items(self) -> Iterable[tuple[str, Element]]:
-        """Same as a dictionary's items method.
-
-        """
+        """Same as a dictionary's items method."""
         raise NotImplementedError("The protocol doesn't support this directly.")
 
-    def __len__(self): return len(list(self.keys()))
+    def __len__(self):
+        return len(list(self.keys()))

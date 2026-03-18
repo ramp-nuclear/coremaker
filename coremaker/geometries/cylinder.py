@@ -1,6 +1,5 @@
-"""Cylindrical finite geometries.
+"""Cylindrical finite geometries."""
 
-"""
 from typing import Literal
 
 import numpy as np
@@ -23,16 +22,11 @@ def cylinder_bounding_box(center, axis, radius, length):
 
 
 class FiniteCylinder(Serializable):
-    """Represents a finite cylinder in any direction
-
-    """
+    """Represents a finite cylinder in any direction"""
 
     ser_identifier = "FiniteCylinder"
 
-    def __init__(self, center: tuple[cm, cm, cm],
-                 radius: cm,
-                 length: cm,
-                 axis: tuple[float, float, float]):
+    def __init__(self, center: tuple[cm, cm, cm], radius: cm, length: cm, axis: tuple[float, float, float]):
         """
 
         Parameters
@@ -49,7 +43,7 @@ class FiniteCylinder(Serializable):
         self.center = tuple(float(v) for v in np.round(center, DECIMAL_PRECISION))
         self.radius = radius
         self.length = length
-        if axis == (0., 0., 0.):
+        if axis == (0.0, 0.0, 0.0):
             raise ValueError("Cylinder geometry direction cannot be 0")
         self.axis = axis
 
@@ -58,10 +52,7 @@ class FiniteCylinder(Serializable):
         return axis / norm2(axis, ord=2)
 
     @classmethod
-    def cardinal(cls, center: tuple[cm, cm, cm],
-                 radius: float,
-                 length: float,
-                 axis: Literal['x', 'y', 'z', 0, 1, 2]):
+    def cardinal(cls, center: tuple[cm, cm, cm], radius: float, length: float, axis: Literal["x", "y", "z", 0, 1, 2]):
         """
 
         Parameters
@@ -78,32 +69,37 @@ class FiniteCylinder(Serializable):
             'y' and 1 are shortcuts for the (0,1,0) axis.
             'z' and 2 are shortcuts for the (0,0,1) axis.
         """
-        return cls(center, radius, length,
-                   {
-                       0: (1.0, 0.0, 0.0),
-                       1: (0.0, 1.0, 0.0),
-                       2: (0.0, 0.0, 1.0),
-                       'x': (1.0, 0.0, 0.0),
-                       'y': (0.0, 1.0, 0.0),
-                       'z': (0.0, 0.0, 1.0), }[axis])
+        return cls(
+            center,
+            radius,
+            length,
+            {
+                0: (1.0, 0.0, 0.0),
+                1: (0.0, 1.0, 0.0),
+                2: (0.0, 0.0, 1.0),
+                "x": (1.0, 0.0, 0.0),
+                "y": (0.0, 1.0, 0.0),
+                "z": (0.0, 0.0, 1.0),
+            }[axis],
+        )
 
     @property
     def volume(self) -> float:
-        return self.length * np.pi * self.radius ** 2
+        return self.length * np.pi * self.radius**2
 
     @property
     def surfaces(self) -> tuple[Plane, Plane, Cylinder]:
-        """The surfaces that make up this finite geometry.
-
-        """
+        """The surfaces that make up this finite geometry."""
         axis = self._canonical_axis()
         center = np.array(self.center)
         a1, a2, a3 = axis
         bp = axis @ center + self.length / 2
         bm = axis @ center - self.length / 2
-        return (Plane(a1, a2, a3, bm),
-                -Plane(a1, a2, a3, bp),
-                Cylinder(self.center, self.radius, self.axis, inside=True))
+        return (
+            Plane(a1, a2, a3, bm),
+            -Plane(a1, a2, a3, bp),
+            Cylinder(self.center, self.radius, self.axis, inside=True),
+        )
 
     def transform(self, transform: Transform) -> "FiniteCylinder":
         """Allows for translation and rotation of this geometry.
@@ -118,31 +114,32 @@ class FiniteCylinder(Serializable):
         A new FiniteCylinder.
 
         """
-        return FiniteCylinder(tuple(transform @ np.asarray(self.center)),
-                              self.radius,
-                              self.length,
-                              tuple(transform.rotmat @ np.asarray(self.axis)))
+        return FiniteCylinder(
+            tuple(transform @ np.asarray(self.center)),
+            self.radius,
+            self.length,
+            tuple(transform.rotmat @ np.asarray(self.axis)),
+        )
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, FiniteCylinder):
             return NotImplemented
         axis, oaxis = self._canonical_axis(), other._canonical_axis()
-        return (allclose(self.center, other.center) and
-                allclose(abs(axis @ oaxis), 1) and
-                all(isclose(getattr(self, d), getattr(other, d))
-                    for d in ('radius', 'length'))
-                )
+        return (
+            allclose(self.center, other.center)
+            and allclose(abs(axis @ oaxis), 1)
+            and all(isclose(getattr(self, d), getattr(other, d)) for d in ("radius", "length"))
+        )
 
     def __hash__(self):
         return hash((self.center, self.radius, self.length, tuple(self._canonical_axis())))
 
     def __repr__(self) -> str:
-        return f"FiniteCylinder<Center: {comma_format(self.center)}, " \
-               f"Radius: {self.radius:.3e}, Length: {self.length:.3e}, " \
-               f"Axis: {comma_format(self.axis)}>"
+        return (
+            f"FiniteCylinder<Center: {comma_format(self.center)}, "
+            f"Radius: {self.radius:.3e}, Length: {self.length:.3e}, "
+            f"Axis: {comma_format(self.axis)}>"
+        )
 
     def bounding_box(self):
-        return cylinder_bounding_box(self.center,
-                                     self.axis,
-                                     self.radius,
-                                     self.length)
+        return cylinder_bounding_box(self.center, self.axis, self.radius, self.length)

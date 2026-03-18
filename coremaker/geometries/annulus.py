@@ -1,6 +1,5 @@
-"""Finite tube (annulus) geometries.
+"""Finite tube (annulus) geometries."""
 
-"""
 from typing import Literal
 
 import numpy as np
@@ -16,20 +15,20 @@ from coremaker.units import cm
 
 
 class Annulus(Serializable):
-    """A finite annulus geometry.
+    """A finite annulus geometry."""
 
-    """
-    
     __slots__ = ("center", "inner_radius", "outer_radius", "length", "axis")
-    
+
     ser_identifier = "Annulus"
 
-    def __init__(self,
-                 center: tuple[cm, cm, cm],
-                 inner_radius: cm,
-                 outer_radius: cm,
-                 length: cm,
-                 axis: tuple[float, float, float]):
+    def __init__(
+        self,
+        center: tuple[cm, cm, cm],
+        inner_radius: cm,
+        outer_radius: cm,
+        length: cm,
+        axis: tuple[float, float, float],
+    ):
         """
 
         Parameters
@@ -50,23 +49,28 @@ class Annulus(Serializable):
 
         """
         if not outer_radius > inner_radius:
-            raise ValueError(f'The outer radius of the tube {outer_radius:.5e} '
-                             f'must be larger than the inner radius {inner_radius:.5e}'
-                             f'of the tube.')
+            raise ValueError(
+                f"The outer radius of the tube {outer_radius:.5e} "
+                f"must be larger than the inner radius {inner_radius:.5e}"
+                f"of the tube."
+            )
         self.center = np.round(center, decimals=DECIMAL_PRECISION)
         self.inner_radius = inner_radius
         self.outer_radius = outer_radius
         self.length = length
-        if axis == (0., 0., 0.):
+        if axis == (0.0, 0.0, 0.0):
             raise ValueError("Annulus axis is a direction and thus cannot be 0")
         self.axis = axis
 
     @classmethod
-    def cardinal(cls, center: tuple[cm, cm, cm],
-                 inner_radius: cm,
-                 outer_radius: cm,
-                 length: cm,
-                 axis: Literal['x', 'y', 'z', 0, 1, 2]):
+    def cardinal(
+        cls,
+        center: tuple[cm, cm, cm],
+        inner_radius: cm,
+        outer_radius: cm,
+        length: cm,
+        axis: Literal["x", "y", "z", 0, 1, 2],
+    ):
         """
         Parameters
         ----------
@@ -89,17 +93,24 @@ class Annulus(Serializable):
         ValueError if outer_radius <= inner_radius
 
         """
-        return cls(center, inner_radius, outer_radius, length, {
-            0: (1.0, 0.0, 0.0),
-            1: (0.0, 1.0, 0.0),
-            2: (0.0, 0.0, 1.0),
-            'x': (1.0, 0.0, 0.0),
-            'y': (0.0, 1.0, 0.0),
-            'z': (0.0, 0.0, 1.0), }[axis])
+        return cls(
+            center,
+            inner_radius,
+            outer_radius,
+            length,
+            {
+                0: (1.0, 0.0, 0.0),
+                1: (0.0, 1.0, 0.0),
+                2: (0.0, 0.0, 1.0),
+                "x": (1.0, 0.0, 0.0),
+                "y": (0.0, 1.0, 0.0),
+                "z": (0.0, 0.0, 1.0),
+            }[axis],
+        )
 
     @property
     def volume(self) -> float:
-        return self.length * np.pi * (self.outer_radius ** 2 - self.inner_radius ** 2)
+        return self.length * np.pi * (self.outer_radius**2 - self.inner_radius**2)
 
     def _equitable(self):
         axis = np.asarray(self.axis)
@@ -111,19 +122,22 @@ class Annulus(Serializable):
             return NotImplemented
         scenter, saxis, *srest = self._equitable()
         ocenter, oaxis, *orest = other._equitable()
-        return (allclose(scenter, ocenter)
-                and isclose(abs(saxis @ oaxis), 1)
-                and all(isclose(a, b) for a, b in zip(srest, orest))
-                )
+        return (
+            allclose(scenter, ocenter)
+            and isclose(abs(saxis @ oaxis), 1)
+            and all(isclose(a, b) for a, b in zip(srest, orest))
+        )
 
     def __hash__(self):
         c, *r = self.equitable()
         return hash((tuple(c), *r))
 
     def __repr__(self) -> str:
-        return (f"Annulus<Center: {comma_format(self.center)}, "
-                f"Radii: {comma_format((self.inner_radius, self.outer_radius))}, "
-                f"Length: {self.length:.3e}, {comma_format(self.axis)} Axis>")
+        return (
+            f"Annulus<Center: {comma_format(self.center)}, "
+            f"Radii: {comma_format((self.inner_radius, self.outer_radius))}, "
+            f"Length: {self.length:.3e}, {comma_format(self.axis)} Axis>"
+        )
 
     @property
     def surfaces(self) -> tuple[Plane, Plane, Cylinder, Cylinder]:
@@ -133,34 +147,32 @@ class Annulus(Serializable):
         a1, a2, a3 = axis
         bp = axis @ center + self.length / 2
         bm = axis @ center - self.length / 2
-        return (Plane(a1, a2, a3, bm),
-                -Plane(a1, a2, a3, bp),
-                Cylinder(tuple(self.center), self.inner_radius, self.axis, inside=False),
-                Cylinder(tuple(self.center), self.outer_radius, self.axis, inside=True))
+        return (
+            Plane(a1, a2, a3, bm),
+            -Plane(a1, a2, a3, bp),
+            Cylinder(tuple(self.center), self.inner_radius, self.axis, inside=False),
+            Cylinder(tuple(self.center), self.outer_radius, self.axis, inside=True),
+        )
 
     def transform(self, transform: Transform) -> "Annulus":
-        return Annulus(tuple(transform @ self.center),
-                       self.inner_radius, self.outer_radius,
-                       self.length, axis=tuple(transform.rotmat @ self.axis))
+        return Annulus(
+            tuple(transform @ self.center),
+            self.inner_radius,
+            self.outer_radius,
+            self.length,
+            axis=tuple(transform.rotmat @ self.axis),
+        )
 
     def bounding_box(self):
-        return cylinder_bounding_box(self.center,
-                                     self.axis,
-                                     self.outer_radius,
-                                     self.length)
+        return cylinder_bounding_box(self.center, self.axis, self.outer_radius, self.length)
 
 
 class Ring(Serializable):
-    """A 2d ring geometry.
-
-    """
+    """A 2d ring geometry."""
 
     ser_identifier = "Ring"
 
-    def __init__(self,
-                 center: tuple[cm, cm],
-                 inner_radius: cm,
-                 outer_radius: cm):
+    def __init__(self, center: tuple[cm, cm], inner_radius: cm, outer_radius: cm):
         """
 
         Parameters
@@ -179,40 +191,40 @@ class Ring(Serializable):
 
         """
         if not outer_radius > inner_radius:
-            raise ValueError(f'The outer radius of the tube {outer_radius:.5e} '
-                             f'must be larger than the inner radius {inner_radius:.5e}'
-                             f'of the tube.')
+            raise ValueError(
+                f"The outer radius of the tube {outer_radius:.5e} "
+                f"must be larger than the inner radius {inner_radius:.5e}"
+                f"of the tube."
+            )
         self.center = np.round(center, decimals=DECIMAL_PRECISION)
         self.inner_radius = inner_radius
         self.outer_radius = outer_radius
 
     @property
     def volume(self) -> float:
-        return np.pi * (self.outer_radius ** 2 - self.inner_radius ** 2)
+        return np.pi * (self.outer_radius**2 - self.inner_radius**2)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Ring):
-            return (allclose(self.center, other.center)
-                    and all(isclose(getattr(self, d), getattr(other, d))
-                            for d in ('inner_radius', 'outer_radius'))
-                    )
+            return allclose(self.center, other.center) and all(
+                isclose(getattr(self, d), getattr(other, d)) for d in ("inner_radius", "outer_radius")
+            )
         return NotImplemented
 
     def __hash__(self):
         return hash((tuple(self.center.flatten()), self.inner_radius, self.outer_radius))
 
     def __repr__(self) -> str:
-        return (f"Ring<Center: {comma_format(self.center)}, "
-                f"Radii: {comma_format((self.inner_radius, self.outer_radius))},")
+        return (
+            f"Ring<Center: {comma_format(self.center)}, Radii: {comma_format((self.inner_radius, self.outer_radius))},"
+        )
 
     @property
     def surfaces(self) -> tuple[Cylinder, Cylinder]:
         return (
-            Cylinder(tuple(np.hstack([self.center, [0]])), self.inner_radius,
-                     axis=(0, 0, 1), inside=False),
-            Cylinder(tuple(np.hstack([self.center, [0]])), self.outer_radius,
-                     axis=(0, 0, 1), inside=True))
+            Cylinder(tuple(np.hstack([self.center, [0]])), self.inner_radius, axis=(0, 0, 1), inside=False),
+            Cylinder(tuple(np.hstack([self.center, [0]])), self.outer_radius, axis=(0, 0, 1), inside=True),
+        )
 
     def transform(self, transform: Transform) -> "Ring":
-        return Ring((transform @ np.hstack([self.center, [0]]))[:2],
-                    self.inner_radius, self.outer_radius)
+        return Ring((transform @ np.hstack([self.center, [0]]))[:2], self.inner_radius, self.outer_radius)

@@ -23,6 +23,7 @@ which is just a concatenation of the path to the lattice, the site and the
 path within the element at the site to the component.
 
 """
+
 from pathlib import PurePath
 from typing import Any, Iterable, Optional, Type, TypeVar
 
@@ -42,21 +43,15 @@ from coremaker.protocols.node import NodeLike
 from coremaker.transform import Transform
 from coremaker.tree import Tree
 
-TREE_NAME = PurePath('CoreTree')
+TREE_NAME = PurePath("CoreTree")
 
 
 class Core(CoreProtocol):
-    """A concrete implementation of the Core protocol using a Tree-like object.
-
-    """
+    """A concrete implementation of the Core protocol using a Tree-like object."""
 
     ser_identifier = "Core"
 
-    def __init__(self, grid: Grid,
-                 aliases: AliasMap,
-                 tree: Tree,
-                 outer_geometry: Optional[Geometry] = None
-                 ):
+    def __init__(self, grid: Grid, aliases: AliasMap, tree: Tree, outer_geometry: Optional[Geometry] = None):
         """Initialization.
 
         See Also
@@ -89,23 +84,25 @@ class Core(CoreProtocol):
         self._outer_geometry = outer_geometry
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
-        aliases = {alias: [explanation, [str(path) for path in paths]]
-                   for alias, (explanation, paths) in self.aliases.items()}
-        return self.ser_identifier, {"grid": self.grid.serialize(),
-                                     "aliases": aliases,
-                                     "tree": self.tree.serialize(),
-                                     "outer_geometry": self._outer_geometry.serialize() if self._outer_geometry else None
-                                     }
+        aliases = {
+            alias: [explanation, [str(path) for path in paths]] for alias, (explanation, paths) in self.aliases.items()
+        }
+        return self.ser_identifier, {
+            "grid": self.grid.serialize(),
+            "aliases": aliases,
+            "tree": self.tree.serialize(),
+            "outer_geometry": self._outer_geometry.serialize() if self._outer_geometry else None,
+        }
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
         grid = deserialize_default(d["grid"], supported=supported)
         tree = deserialize_default(d["tree"], supported=supported, default=Tree)
-        geom = (deserialize_default(d["outer_geometry"], supported=supported) 
-                if d["outer_geometry"] is not None else None)
+        geom = (
+            deserialize_default(d["outer_geometry"], supported=supported) if d["outer_geometry"] is not None else None
+        )
         aliases = {alias: (e, [PurePath(p) for p in paths]) for alias, (e, paths) in d["aliases"].items()}
         return cls(grid=grid, aliases=aliases, tree=tree, outer_geometry=geom)
-        
 
     def __getitem__(self, key: PurePath) -> NodeLike:
         """Gets you a node using its path.
@@ -135,10 +132,13 @@ class Core(CoreProtocol):
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return all(
-                (self.grid == other.grid,
-                 self.aliases == other.aliases,
-                 self.tree == other.tree,
-                 self._outer_geometry == other._outer_geometry))
+                (
+                    self.grid == other.grid,
+                    self.aliases == other.aliases,
+                    self.tree == other.tree,
+                    self._outer_geometry == other._outer_geometry,
+                )
+            )
         return False
 
     def site_transform(self, site: Site) -> Transform:
@@ -170,7 +170,7 @@ class Core(CoreProtocol):
     @property
     def free_elements(self) -> Iterable[tuple[str, Tree]]:
         yield str(TREE_NAME), self.tree
-    
+
     free_elements.__doc__ = CoreProtocol.free_elements.__doc__
 
     @property
@@ -184,8 +184,7 @@ class Core(CoreProtocol):
     nodes.__doc__ = CoreProtocol.nodes.__doc__
 
     def _root_geometry(self) -> Geometry:
-        roots = [n.geometry.transform(self.transform_of(TREE_NAME / p))
-                 for p, n in self.tree.roots()]
+        roots = [n.geometry.transform(self.transform_of(TREE_NAME / p)) for p, n in self.tree.roots()]
         return roots[0] if len(roots) == 1 else ConcreteUnionGeometry(roots)
 
     @property

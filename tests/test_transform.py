@@ -1,6 +1,5 @@
-"""Tests for the Transform object
+"""Tests for the Transform object"""
 
-"""
 import hypothesis.strategies as st
 import numpy as np
 from conftest import medfloats, rotations, transforms

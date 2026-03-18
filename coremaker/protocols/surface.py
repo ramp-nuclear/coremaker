@@ -7,6 +7,7 @@ Thus, the :ref:`surfaces` subpackage of CoreMaker is also considered public API,
 It is still best to make those specific assumptions as local as possible, so new and exciting surfaces can be used.
 
 """
+
 from typing import Hashable, Protocol
 
 from ramp_core.serializable import Serializable
@@ -16,14 +17,10 @@ from coremaker.units import cm
 
 
 class Surface(Serializable, Hashable, Protocol):
-    """Representation of a surface
-
-    """
+    """Representation of a surface"""
 
     def __neg__(self) -> "Surface":
-        """Returns the inverse side of this surface.
-
-        """
+        """Returns the inverse side of this surface."""
         ...
 
     def isclose(self, other: "Surface"):

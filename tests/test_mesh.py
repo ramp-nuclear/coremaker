@@ -19,4 +19,3 @@ def test_cartesian_mesh_from_vertices_minimal_maximal_boundaries_as_expected(ver
     for low, high, attr in zip(lower, upper, "xyz"):
         assert getattr(mesh, attr)[0] == low
         assert getattr(mesh, attr)[-1] == high
-

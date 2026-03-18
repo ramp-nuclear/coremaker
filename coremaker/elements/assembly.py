@@ -1,6 +1,5 @@
-"""Fuels made out of multiple components arranged alongside one another. 
+"""Fuels made out of multiple components arranged alongside one another."""
 
-"""
 from pathlib import PurePath
 from typing import Callable, Iterable
 
@@ -14,14 +13,15 @@ Factory = Callable[[], Tree]
 FactorySpec = tuple[Factory, Transform, str]
 
 
-def singular_root_construction(factories: Iterable[FactorySpec],
-                               *,
-                               root_mixture: Mixture | None = None,
-                               outer_geometry: Geometry = infiniteGeometry,
-                               root_path: PurePath,
-                               relationship: ChildType,
-                               transform: Transform = identity,
-                               ) -> Tree:
+def singular_root_construction(
+    factories: Iterable[FactorySpec],
+    *,
+    root_mixture: Mixture | None = None,
+    outer_geometry: Geometry = infiniteGeometry,
+    root_path: PurePath,
+    relationship: ChildType,
+    transform: Transform = identity,
+) -> Tree:
     """Creates an assembly where there is one root and each of its progeny is
     a tree constructible from a factory.
 
@@ -50,6 +50,6 @@ def singular_root_construction(factories: Iterable[FactorySpec],
         for rpath, node in tuple(branch.roots()):
             branch.transform(rpath, transform)
             if suffix:
-                branch.rename(rpath, PurePath(f'{rpath}_{suffix}'))
+                branch.rename(rpath, PurePath(f"{rpath}_{suffix}"))
         assembly.graft(branch, root_path, relationship)
     return assembly

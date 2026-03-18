@@ -1,6 +1,5 @@
-"""A planar surface.
+"""A planar surface."""
 
-"""
 import math
 from functools import lru_cache
 from typing import Any, Sequence, Type, TypeVar
@@ -31,7 +30,7 @@ class Plane(Serializable):
     """
 
     ser_identifier = "Plane"
-    __slots__ = ['a', 'b']
+    __slots__ = ["a", "b"]
 
     @lru_cache(maxsize=100)
     def __new__(cls, *args, **kwargs):
@@ -68,9 +67,9 @@ class Plane(Serializable):
         norm1, norm2 = norm(coeff1, ord=2), norm(coeff2, ord=2)
         b1, b2 = self.b / norm1, other.b / norm2
         coeff1, coeff2 = coeff1 / norm1, coeff2 / norm2
-        return (math.isclose(b1, b2, rel_tol=0, abs_tol=1e-5)
-                and math.isclose(coeff1 @ coeff2, 1, rel_tol=1e-10, abs_tol=0)
-                )
+        return math.isclose(b1, b2, rel_tol=0, abs_tol=1e-5) and math.isclose(
+            coeff1 @ coeff2, 1, rel_tol=1e-10, abs_tol=0
+        )
 
     def __init__(self, /, a1: cm, a2: cm, a3: cm, b: cm, *, check=False):
         self.a = (a1, a2, a3)
@@ -118,26 +117,22 @@ class Plane(Serializable):
         if not any(self.a):
             return "Plane<Undefined plane with a=0!>"
         if a1 != 0 and self.isclose(Plane(a1, 0.0, 0.0, self.b)):
-            sign = '-' if a1 < 0 else ''
+            sign = "-" if a1 < 0 else ""
             return f"Plane<{sign}x >= {abs(self.b / a1):.3e}>"
         elif a2 != 0 and self.isclose(Plane(0.0, a2, 0.0, self.b)):
-            sign = '-' if a2 < 0 else ''
+            sign = "-" if a2 < 0 else ""
             return f"Plane<{sign}y >= {abs(self.b / a2):.3e}>"
         elif a3 != 0 and self.isclose(Plane(0.0, 0.0, a3, self.b)):
-            sign = '-' if a3 < 0 else ''
+            sign = "-" if a3 < 0 else ""
             return f"Plane<{sign}z >= {abs(self.b / a3):.3e}>"
         elif self.isclose(Plane(0.0, a2, a3, self.b)):
-            return f"Plane<{a2:.3e}y + {a3:.3e}z " \
-                   f">= {self.b:.3e}>"
+            return f"Plane<{a2:.3e}y + {a3:.3e}z >= {self.b:.3e}>"
         elif self.isclose(Plane(a1, 0.0, a3, self.b)):
-            return f"Plane<{a1:.3e}x + {a3:.3e}z " \
-                   f">= {self.b:.3e}>"
+            return f"Plane<{a1:.3e}x + {a3:.3e}z >= {self.b:.3e}>"
         elif self.isclose(Plane(a1, a2, 0.0, self.b)):
-            return f"Plane<{a1:.3e}x + {a2:.3e}y " \
-                   f">= {self.b:.3e}>"
+            return f"Plane<{a1:.3e}x + {a2:.3e}y >= {self.b:.3e}>"
         else:
-            return f"Plane<{a1:.3e}x + {a2:.3e}y + {a3:.3e}z " \
-                   f">= {self.b:.3e}>"
+            return f"Plane<{a1:.3e}x + {a2:.3e}y + {a3:.3e}z >= {self.b:.3e}>"
 
 
 def calculate_plane_intersection_volume(planes: Sequence[Plane]) -> float | None:

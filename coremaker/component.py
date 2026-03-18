@@ -1,6 +1,5 @@
-"""A concrete implementation of the Component Protocol.
+"""A concrete implementation of the Component Protocol."""
 
-"""
 from dataclasses import dataclass
 
 from coremaker.protocols.geometry import Geometry, HoledGeometry, UnionGeometry
@@ -22,10 +21,14 @@ class ConcreteComponent:
         The external surfaces of this component, after holes are taken into account.
 
     """
+
     mixture: Mixture
     geometry: UnionGeometry | HoledGeometry | Geometry
 
     def __hash__(self):
-        return hash((hash(self.mixture),
-                     tuple(hash(s) for s in self.geometry.surfaces),
-                     ))
+        return hash(
+            (
+                hash(self.mixture),
+                tuple(hash(s) for s in self.geometry.surfaces),
+            )
+        )

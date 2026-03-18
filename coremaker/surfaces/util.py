@@ -1,6 +1,5 @@
-"""Utilities for surface objects
+"""Utilities for surface objects"""
 
-"""
 from functools import partial
 from itertools import product
 from typing import Iterable
@@ -8,7 +7,7 @@ from typing import Iterable
 import numpy as np
 
 DECIMAL_PRECISION = 5
-PRECISION = 10 ** -DECIMAL_PRECISION
+PRECISION = 10**-DECIMAL_PRECISION
 isclose = partial(np.isclose, atol=10 * PRECISION, rtol=10 * PRECISION)
 allclose = partial(np.allclose, atol=10 * PRECISION, rtol=10 * PRECISION)
 
@@ -65,6 +64,4 @@ def _make_rotvec(rot: float, i: int) -> np.ndarray:
     return arr
 
 
-cardinal_rotations = {
-    canonize(_make_rotvec(n * np.pi / 2, ind)) for n, ind in product(range(4), range(3))
-}
+cardinal_rotations = {canonize(_make_rotvec(n * np.pi / 2, ind)) for n, ind in product(range(4), range(3))}

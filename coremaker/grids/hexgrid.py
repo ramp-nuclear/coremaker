@@ -24,7 +24,8 @@ def default_serial_to_lattice_index(site_index: Coords, shape: tuple[int, int]) 
     return site_pos
 
 
-def _default_name_partition(site: Site) -> tuple[str, str]: return site[0], site[1:]
+def _default_name_partition(site: Site) -> tuple[str, str]:
+    return site[0], site[1:]
 
 
 T = TypeVar("T")
@@ -85,19 +86,20 @@ class HexagonalGrid(Grid):
 
     ser_identifier = "HexGrid"
 
-    def __init__(self,
-                 center: tuple[cm, cm, cm],
-                 shape: tuple[int, int],
-                 pitch: cm,
-                 height: cm,
-                 outer_radius: cm,
-                 mixture: Mixture,
-                 rod_contents: dict[Site, Element] | None = None,
-                 prefix_indexing: Sequence = alphabet,
-                 suffix_indexing: Sequence = _default_suffixes,
-                 site_name_partition: Callable[[Site], Coords] = _default_name_partition,
-                 serial_to_lattice_index: Callable[[Coords, Coords], Coords] = default_serial_to_lattice_index
-                 ):
+    def __init__(
+        self,
+        center: tuple[cm, cm, cm],
+        shape: tuple[int, int],
+        pitch: cm,
+        height: cm,
+        outer_radius: cm,
+        mixture: Mixture,
+        rod_contents: dict[Site, Element] | None = None,
+        prefix_indexing: Sequence = alphabet,
+        suffix_indexing: Sequence = _default_suffixes,
+        site_name_partition: Callable[[Site], Coords] = _default_name_partition,
+        serial_to_lattice_index: Callable[[Coords, Coords], Coords] = default_serial_to_lattice_index,
+    ):
         self.contents = rod_contents or {}
         self.lattice = HexagonalLattice(center, shape, pitch, height, outer_radius, mixture)
         self.prefix_indexing = prefix_indexing
@@ -106,14 +108,15 @@ class HexagonalGrid(Grid):
         self._serial_to_lattice_index = serial_to_lattice_index
 
     @classmethod
-    def from_lattice(cls: Type[Self],
-                     contents: dict[Site, Element],
-                     lattice: HexagonalLattice,
-                     prefix_indexing: Sequence[str] = alphabet,
-                     suffix_indexing: Sequence[str] = _default_suffixes,
-                     site_name_partition: Callable[[Site], Coords] = _default_name_partition,
-                     serial_to_lattice_index: Callable[[Coords, Coords], Coords] = default_serial_to_lattice_index,
-                     ) -> Self:
+    def from_lattice(
+        cls: Type[Self],
+        contents: dict[Site, Element],
+        lattice: HexagonalLattice,
+        prefix_indexing: Sequence[str] = alphabet,
+        suffix_indexing: Sequence[str] = _default_suffixes,
+        site_name_partition: Callable[[Site], Coords] = _default_name_partition,
+        serial_to_lattice_index: Callable[[Coords, Coords], Coords] = default_serial_to_lattice_index,
+    ) -> Self:
         """Create a grid from an existing Hexagonal lattice.
 
         Parameters
@@ -149,8 +152,10 @@ class HexagonalGrid(Grid):
             prefix_indexing=list(self.prefix_indexing),
             suffix_indexing=list(self.suffix_indexing),
             name_partition={site: list(self._site_name_partition(site)) for site in self.sites()},
-            serial_index=[[list(index), list(self._serial_to_lattice_index(index, self.lattice.shape))]
-                          for index in serial_indices]
+            serial_index=[
+                [list(index), list(self._serial_to_lattice_index(index, self.lattice.shape))]
+                for index in serial_indices
+            ],
         )
 
     @classmethod
@@ -158,17 +163,18 @@ class HexagonalGrid(Grid):
         lattice = deserialize_default(d["lattice"], supported=supported, default=HexagonalLattice)
         name_partition = {site: tuple(result) for site, result in d["name_partition"].items()}
         serial = {tuple(ser_index): tuple(lat_index) for ser_index, lat_index in d["serial_index"]}
-        return cls.from_lattice(contents=deserialize_contents(d["contents"], supported=supported),
-                                lattice=lattice,
-                                prefix_indexing=d["prefix_indexing"],
-                                suffix_indexing=d["suffix_indexing"],
-                                site_name_partition=_func_from_dict(name_partition),
-                                serial_to_lattice_index=_func_from_dict(serial),
-                                )
+        return cls.from_lattice(
+            contents=deserialize_contents(d["contents"], supported=supported),
+            lattice=lattice,
+            prefix_indexing=d["prefix_indexing"],
+            suffix_indexing=d["suffix_indexing"],
+            site_name_partition=_func_from_dict(name_partition),
+            serial_to_lattice_index=_func_from_dict(serial),
+        )
 
     @property
     def lattices(self) -> tuple[HexagonalLattice]:
-        return self.lattice,
+        return (self.lattice,)
 
     lattices.__doc__ = Grid.lattices.__doc__
 
@@ -217,8 +223,11 @@ class HexagonalGrid(Grid):
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
-            return all((self.lattice == other.lattice,
-                        self.contents == other.contents,
-                        all(self.site_index(site) == other.site_index(site) for site in self.sites())
-                        ))
+            return all(
+                (
+                    self.lattice == other.lattice,
+                    self.contents == other.contents,
+                    all(self.site_index(site) == other.site_index(site) for site in self.sites()),
+                )
+            )
         return NotImplemented

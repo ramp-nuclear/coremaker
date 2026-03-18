@@ -1,6 +1,5 @@
-"""Reflector materials
+"""Reflector materials"""
 
-"""
 from isotopes import B, Be, C
 
 from coremaker.materials.mixture import Mixture
@@ -11,6 +10,4 @@ from coremaker.protocols.mixture import Chemical
 beryllium = Mixture({Be: 1.23487e-1}, room_temperature, (Chemical.Be,))
 # The source says impurities differ and users should pick their own values!
 # Use at your own risk!
-graphite = Mixture.alloy(C, {B: 1e-6}, 1.7,
-                         room_temperature, (Chemical.Graphite,)
-                         )
+graphite = Mixture.alloy(C, {B: 1e-6}, 1.7, room_temperature, (Chemical.Graphite,))

@@ -1,6 +1,4 @@
-"""The infinite geometry that knows no bounds.
-
-"""
+"""The infinite geometry that knows no bounds."""
 
 from dataclasses import dataclass
 
@@ -11,9 +9,7 @@ from coremaker.transform import Transform
 
 @dataclass(frozen=True, init=False)
 class _InfiniteGeometry(Serializable):
-    """An infinite, surfaceless geometry
-
-    """
+    """An infinite, surfaceless geometry"""
 
     ser_identifier = "InfiniteGeometry"
     __slots__ = ()
@@ -22,7 +18,8 @@ class _InfiniteGeometry(Serializable):
         pass
 
     @property
-    def volume(self) -> None: return None
+    def volume(self) -> None:
+        return None
 
     def transform(self, transform: Transform) -> "_InfiniteGeometry":
         return self
@@ -31,21 +28,23 @@ class _InfiniteGeometry(Serializable):
     def surfaces(self) -> ():
         return ()
 
-    def serialize(self) -> tuple[str, dict]: return self.ser_identifier, {}
+    def serialize(self) -> tuple[str, dict]:
+        return self.ser_identifier, {}
 
     @classmethod
-    def deserialize(cls, *_, **__) -> "_InfiniteGeometry": return infiniteGeometry
+    def deserialize(cls, *_, **__) -> "_InfiniteGeometry":
+        return infiniteGeometry
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return True
         return NotImplemented
 
-    def __hash__(self): return 42  # Singleton object, we can cheat
+    def __hash__(self):
+        return 42  # Singleton object, we can cheat
 
 
 infiniteGeometry = _InfiniteGeometry()
 
 
-__all__ = ['infiniteGeometry']
-
+__all__ = ["infiniteGeometry"]

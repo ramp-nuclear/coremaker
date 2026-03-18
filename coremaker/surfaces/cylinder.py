@@ -1,6 +1,5 @@
-"""A cylindrical surface object.
+"""A cylindrical surface object."""
 
-"""
 import math
 
 import numpy as np
@@ -33,14 +32,9 @@ class Cylinder(Serializable):
     """
 
     ser_identifier = "SurfCyl"
-    __slots__ = ['center', 'radius', 'axis', 'inside']
+    __slots__ = ["center", "radius", "axis", "inside"]
 
-    def __init__(self,
-                 center: tuple[cm, cm, cm],
-                 radius: cm,
-                 axis: tuple[float, float, float],
-                 *,
-                 inside: bool):
+    def __init__(self, center: tuple[cm, cm, cm], radius: cm, axis: tuple[float, float, float], *, inside: bool):
         """
 
         Parameters
@@ -54,7 +48,7 @@ class Cylinder(Serializable):
         inside: bool
             A flag for whether we are discussing the inside or outside the cylinder.
         """
-        if axis == (0., 0., 0.):
+        if axis == (0.0, 0.0, 0.0):
             raise ValueError("Cylinder axis cannot be 0.")
         self.axis = axis
         self.center = center
@@ -62,28 +56,25 @@ class Cylinder(Serializable):
         self.inside = inside
 
     def __hash__(self):
-        return hash((self.center,
-                     self.radius,
-                     frozenset((self.axis, tuple(-x for x in self.axis))),
-                     self.inside))
+        return hash((self.center, self.radius, frozenset((self.axis, tuple(-x for x in self.axis))), self.inside))
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Cylinder):
             return NotImplemented
-        return (all(np.all(getattr(self, attr) == getattr(other, attr))
-                    for attr in ('center', 'radius', 'inside'))
-                and (np.all(np.array(self.axis) == np.array(other.axis))
-                     or np.all(np.array(self.axis) == -np.array(other.axis))))
+        return all(np.all(getattr(self, attr) == getattr(other, attr)) for attr in ("center", "radius", "inside")) and (
+            np.all(np.array(self.axis) == np.array(other.axis)) or np.all(np.array(self.axis) == -np.array(other.axis))
+        )
 
     def __neg__(self) -> "Cylinder":
-        return Cylinder(center=self.center, radius=self.radius, axis=self.axis,
-                        inside=not self.inside)
+        return Cylinder(center=self.center, radius=self.radius, axis=self.axis, inside=not self.inside)
 
     def transform(self, transform: Transform) -> "Cylinder":
-        return Cylinder(tuple(transform @ np.array(self.center)),
-                        self.radius,
-                        axis=tuple(transform.rotmat @ self.axis),
-                        inside=self.inside)
+        return Cylinder(
+            tuple(transform @ np.array(self.center)),
+            self.radius,
+            axis=tuple(transform.rotmat @ self.axis),
+            inside=self.inside,
+        )
 
     transform.__doc__ = Surface.transform.__doc__
 
@@ -113,16 +104,19 @@ class Cylinder(Serializable):
         center1, center2 = np.array(self.center), np.array(other.center)
         center1 = center1 - (center1 @ axis1) * axis1
         center2 = center2 - (center2 @ axis2) * axis2
-        return ((self.inside == other.inside)
-                and all(math.isclose(x, y, rel_tol=0, abs_tol=1e-5)
-                        for x, y in zip(center1, center2))
-                and (all(math.isclose(x, y, rel_tol=1e-5, abs_tol=1e-5)
-                         for x, y in zip(axis1, axis2))
-                     or all(math.isclose(x, -y, rel_tol=1e-5, abs_tol=1e-5)
-                            for x, y in zip(axis1, axis2)))
-                and math.isclose(self.radius, other.radius, rel_tol=0, abs_tol=1e-5))
+        return (
+            (self.inside == other.inside)
+            and all(math.isclose(x, y, rel_tol=0, abs_tol=1e-5) for x, y in zip(center1, center2))
+            and (
+                all(math.isclose(x, y, rel_tol=1e-5, abs_tol=1e-5) for x, y in zip(axis1, axis2))
+                or all(math.isclose(x, -y, rel_tol=1e-5, abs_tol=1e-5) for x, y in zip(axis1, axis2))
+            )
+            and math.isclose(self.radius, other.radius, rel_tol=0, abs_tol=1e-5)
+        )
 
     def __repr__(self) -> str:
-        return f"Cylinder(center={comma_format(self.center)}, " \
-               f"radius={self.radius:.3e}, axis={comma_format(self.axis)}, " \
-               f"inside={self.inside}>"
+        return (
+            f"Cylinder(center={comma_format(self.center)}, "
+            f"radius={self.radius:.3e}, axis={comma_format(self.axis)}, "
+            f"inside={self.inside}>"
+        )
