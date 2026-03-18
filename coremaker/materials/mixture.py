@@ -1,6 +1,5 @@
-"""Protocol for isotopic mixtures as far as core creation cares.
+"""Protocol for isotopic mixtures as far as core creation cares."""
 
-"""
 from typing import Any, Container, Iterable, Sequence, Type, TypeVar
 
 try:
@@ -27,13 +26,16 @@ class Mixture(MixtureProtocol):
     """
 
     ser_identifier = "Mixture"
-    __slots__ = ['isotopes', 'temperature', 'sab']
+    __slots__ = ["isotopes", "temperature", "sab"]
 
-    def __init__(self, isotopes: dict[ZAID, float],
-                 temperature: float,
-                 sab_tables: Iterable[Chemical] = (),
-                 *,
-                 ensure_positive: bool = True):
+    def __init__(
+        self,
+        isotopes: dict[ZAID, float],
+        temperature: float,
+        sab_tables: Iterable[Chemical] = (),
+        *,
+        ensure_positive: bool = True,
+    ):
         """
 
         Parameters
@@ -53,29 +55,28 @@ class Mixture(MixtureProtocol):
             A flag for whether zero or negative densities should be dropped.
             By default, zero or negative entries are dropped.
         """
-        self.isotopes = {iso: nd for iso, nd in isotopes.items()
-                         if nd > 0. or not ensure_positive}
+        self.isotopes = {iso: nd for iso, nd in isotopes.items() if nd > 0.0 or not ensure_positive}
         self.temperature = temperature
         self.sab: Sequence[Chemical] = tuple(sab_tables)
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
-        return self.ser_identifier, {"isotopes": {int(iso): v for iso, v in self.isotopes.items()},
-                                     "temperature": self.temperature,
-                                     "sab_tables": tuple(c.name for c in self.sab),
-                                     }
+        return self.ser_identifier, {
+            "isotopes": {int(iso): v for iso, v in self.isotopes.items()},
+            "temperature": self.temperature,
+            "sab_tables": tuple(c.name for c in self.sab),
+        }
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *_, **__) -> Self:
-        return cls(isotopes={Isotope.from_int_with_fallback(int(i)): v for i, v in d["isotopes"].items()},
-                   temperature=d["temperature"],
-                   sab_tables=tuple(Chemical[name] for name in d["sab_tables"]),
-                   ensure_positive=False,
-                   )
+        return cls(
+            isotopes={Isotope.from_int_with_fallback(int(i)): v for i, v in d["isotopes"].items()},
+            temperature=d["temperature"],
+            sab_tables=tuple(Chemical[name] for name in d["sab_tables"]),
+            ensure_positive=False,
+        )
 
     @classmethod
-    def expand(cls, mix: "Mixture",
-               elements: Container[Isotope] = frozenset()
-               ) -> "Mixture":
+    def expand(cls, mix: "Mixture", elements: Container[Isotope] = frozenset()) -> "Mixture":
         """Expand elements in the mixture so that they are replaced with
         specific isotopes of that element instead.
 
@@ -95,24 +96,35 @@ class Mixture(MixtureProtocol):
 
         """
         if elements:
+
             def _iselem(x):
                 return x in elements
         else:
+
             def _iselem(x):
                 return isinstance(x, Isotope) and x.A == 0
 
-        return cls(cumulative_dict(
-            [(subkey, value * mult) for key, value in mix.items()
-             # Safe to ignore type because of the _iselem check.
-             for subkey, mult in (key.abundance.items()  # type: ignore
-                                  if _iselem(key) else [(key, 1.0)])]),
+        return cls(
+            cumulative_dict(
+                [
+                    (subkey, value * mult)
+                    for key, value in mix.items()
+                    # Safe to ignore type because of the _iselem check.
+                    for subkey, mult in (
+                        key.abundance.items()  # type: ignore
+                        if _iselem(key)
+                        else [(key, 1.0)]
+                    )
+                ]
+            ),
             mix.temperature,
-            mix.sab)
+            mix.sab,
+        )
 
     @classmethod
-    def by_chemical_formula(cls, composition: dict[ZAID | str, float],
-                            temperature: float,
-                            sab_tables: Iterable[Chemical] = ()) -> "Mixture":
+    def by_chemical_formula(
+        cls, composition: dict[ZAID | str, float], temperature: float, sab_tables: Iterable[Chemical] = ()
+    ) -> "Mixture":
         """Define mixture by a combination of elemental chemical formulas and isotopes.
 
         Examples
@@ -143,19 +155,22 @@ class Mixture(MixtureProtocol):
             codes know how to deal with multiple :math:`S_{\alpha\beta}` treatments.
 
         """
-        return cls(cumulative_dict([
-            (subkey, n * mult)
-            for key, n in composition.items()
-            for subkey, mult in
-            (parse_chemical(key).items() if isinstance(key, str) else [(key, 1)])
-            ]),
+        return cls(
+            cumulative_dict(
+                [
+                    (subkey, n * mult)
+                    for key, n in composition.items()
+                    for subkey, mult in (parse_chemical(key).items() if isinstance(key, str) else [(key, 1)])
+                ]
+            ),
             temperature,
-            sab_tables)
+            sab_tables,
+        )
 
     @classmethod
-    def by_weight_density(cls, composition: dict[Isotope, float],
-                          temperature: float,
-                          sab_tables: Iterable[Chemical] = ()) -> "Mixture":
+    def by_weight_density(
+        cls, composition: dict[Isotope, float], temperature: float, sab_tables: Iterable[Chemical] = ()
+    ) -> "Mixture":
         """Create a mixture from a bunch of weight densities.
 
         Parameters
@@ -166,16 +181,17 @@ class Mixture(MixtureProtocol):
 
         """
         total_density = sum(composition.values())
-        return cls.by_weight_fraction({iso: density / total_density
-                                       for iso, density in
-                                       composition.items()},
-                                      total_density, temperature,
-                                      sab_tables)
+        return cls.by_weight_fraction(
+            {iso: density / total_density for iso, density in composition.items()},
+            total_density,
+            temperature,
+            sab_tables,
+        )
 
     @classmethod
-    def by_weight_fraction(cls, composition: dict[Isotope, float],
-                           density: float, temperature: float,
-                           sab_tables: Iterable[Chemical] = ()) -> "Mixture":
+    def by_weight_fraction(
+        cls, composition: dict[Isotope, float], density: float, temperature: float, sab_tables: Iterable[Chemical] = ()
+    ) -> "Mixture":
         """Create a mixture given the weight fractions of its components.
 
         Parameters
@@ -190,14 +206,18 @@ class Mixture(MixtureProtocol):
             S_{αβ} tables to associate with the mixture.
 
         """
-        nds = {iso: avogadro * density * fraction / iso.mass
-               for iso, fraction in composition.items()}
+        nds = {iso: avogadro * density * fraction / iso.mass for iso, fraction in composition.items()}
         return cls(nds, temperature, sab_tables=sab_tables)
 
     @classmethod
-    def alloy(cls, main: Isotope, composition: dict[Isotope, float],
-              density: float, temperature: float,
-              sab_tables: Iterable[Chemical] = ()) -> "Mixture":
+    def alloy(
+        cls,
+        main: Isotope,
+        composition: dict[Isotope, float],
+        density: float,
+        temperature: float,
+        sab_tables: Iterable[Chemical] = (),
+    ) -> "Mixture":
         """Make a mixture where there is a dominant component and other weight
         fraction given components.
 
@@ -217,12 +237,12 @@ class Mixture(MixtureProtocol):
         """
         rest = 1.0 - sum(composition.values())
         c = cumulative_dict([(main, rest), *composition.items()])
-        return cls.by_weight_fraction(c, density, temperature,
-                                      sab_tables=sab_tables)
+        return cls.by_weight_fraction(c, density, temperature, sab_tables=sab_tables)
 
     @classmethod
-    def with_impurities(cls, other: "Mixture", impurities: dict[Isotope, float], count: Container[Isotope] = frozenset()
-                        ) -> "Mixture":
+    def with_impurities(
+        cls, other: "Mixture", impurities: dict[Isotope, float], count: Container[Isotope] = frozenset()
+    ) -> "Mixture":
         """Create a new mixture that includes additional impurities.
 
         Notice that this method increases the total density of the material, as the new impurity does not cause a
@@ -259,22 +279,26 @@ class Mixture(MixtureProtocol):
 
         """
         count = count or {key for key in other.keys() if isinstance(key, Isotope)}
-        new = cls({key: value for key, value in other.items() if key in count},
-                  other.temperature, other.sab, ensure_positive=True)
+        new = cls(
+            {key: value for key, value in other.items() if key in count},
+            other.temperature,
+            other.sab,
+            ensure_positive=True,
+        )
         weight = sum(new.weight_densities().values())
         nds = {iso: frac * weight * avogadro / iso.mass for iso, frac in impurities.items()}
-        isos = {iso: other.get(iso, 0.) + nds.get(iso, 0.) for iso in set(nds.keys()) | set(other.keys())}
+        isos = {iso: other.get(iso, 0.0) + nds.get(iso, 0.0) for iso in set(nds.keys()) | set(other.keys())}
         return cls(isos, other.temperature, other.sab, ensure_positive=True)
 
     def __eq__(self, other: MixtureProtocol):
-        return (self.temperature == other.temperature
-                and self.isotopes == other.isotopes
-                and frozenset(self.sab) == frozenset(other.sab))
+        return (
+            self.temperature == other.temperature
+            and self.isotopes == other.isotopes
+            and frozenset(self.sab) == frozenset(other.sab)
+        )
 
     def __hash__(self):
-        return hash((frozenset(self.items()),
-                     self.temperature,
-                     frozenset(self.sab)))
+        return hash((frozenset(self.items()), self.temperature, frozenset(self.sab)))
 
     def __getitem__(self, key: ZAID):
         try:
@@ -317,9 +341,7 @@ class Mixture(MixtureProtocol):
         return self.isotopes.items()
 
     def __repr__(self) -> str:
-        return f'Mixture<temperature [degC]: {self.temperature:.1f}, ' \
-               f'isotopes: {self.isotopes}, ' \
-               'S_{αβ}: 'f'{self.sab}>'
+        return f"Mixture<temperature [degC]: {self.temperature:.1f}, isotopes: {self.isotopes}, S_{{αβ}}: {self.sab}>"
 
     __str__ = __repr__
 
@@ -331,8 +353,10 @@ class Mixture(MixtureProtocol):
         weight density in g/cc.
         """
         # Safe because we check this is in isotope and they have mass...
-        return {iso: den * iso.mass / avogadro if isinstance(iso, Isotope) else np.nan  # type: ignore
-                for iso, den in self.isotopes.items()}
+        return {
+            iso: den * iso.mass / avogadro if isinstance(iso, Isotope) else np.nan  # type: ignore
+            for iso, den in self.isotopes.items()
+        }
 
 
 def just_positives(mix: Mixture) -> Mixture:
@@ -351,7 +375,8 @@ def just_positives(mix: Mixture) -> Mixture:
         A new, filtered mixture.
 
     """
-    return Mixture(temperature=mix.temperature,
-                   isotopes={iso: den for iso, den in mix.isotopes.items()
-                             if den > 0.},
-                   sab_tables=mix.sab)
+    return Mixture(
+        temperature=mix.temperature,
+        isotopes={iso: den for iso, den in mix.isotopes.items() if den > 0.0},
+        sab_tables=mix.sab,
+    )

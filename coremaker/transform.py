@@ -1,6 +1,5 @@
-"""Coordinate transformation object. Used for translation and rotation of other objects in 3D space.
+"""Coordinate transformation object. Used for translation and rotation of other objects in 3D space."""
 
-"""
 from typing import Any, Tuple, TypeVar, Union
 
 import numpy as np
@@ -12,8 +11,7 @@ PRECISION = 6
 TOLERANCE = 10 ** (-PRECISION)
 
 _zvec = np.zeros(3, dtype=np.float64)
-_TransVec = TypeVar('_TransVec',
-                    bound=Union["Transform", np.ndarray])
+_TransVec = TypeVar("_TransVec", bound=Union["Transform", np.ndarray])
 _Triplet = Tuple[float, float, float] | np.ndarray
 
 
@@ -41,13 +39,17 @@ class Transform:
     would yield a shifted and rotated vector as the affine transformation does.
 
     """
-    __slots__ = ['matrix']
+
+    __slots__ = ["matrix"]
     ser_identifier = "Transform"
 
-    def __init__(self, translation: _Triplet = _zvec,
-                 rotation: np.ndarray = np.eye(3, dtype=bool),
-                 sparse: bool = False,
-                 dtype=float):
+    def __init__(
+        self,
+        translation: _Triplet = _zvec,
+        rotation: np.ndarray = np.eye(3, dtype=bool),
+        sparse: bool = False,
+        dtype=float,
+    ):
         """
 
         Parameters
@@ -64,8 +66,7 @@ class Transform:
         """
         mat = np.empty((4, 4), dtype=dtype)
         mat[:-1, :-1] = rotation
-        mat[:-1, -1] = (translation if isinstance(translation, np.ndarray)
-                        else np.array(translation, dtype=dtype))
+        mat[:-1, -1] = translation if isinstance(translation, np.ndarray) else np.array(translation, dtype=dtype)
         mat[-1, :] = np.array([0, 0, 0, 1], dtype=dtype)
         self.matrix = csr_matrix(mat) if sparse else mat
 
@@ -88,15 +89,13 @@ class Transform:
         return cls.from_matrix(csr_matrix(mat) if d["sparse"] else mat)
 
     def is_sparse(self) -> bool:
-        """Returns whether the underlying matrix is sparse or not.
-
-        """
+        """Returns whether the underlying matrix is sparse or not."""
         return isinstance(self.matrix, csr_matrix)
 
     @classmethod
     def from_matrix(cls, mat: np.ndarray) -> "Transform":
         """Create a transform from the 4x4 matrix representation
-        
+
         Parameters
         ----------
         mat: np.ndarry
@@ -113,10 +112,9 @@ class Transform:
         return obj
 
     @classmethod
-    def from_rotvec(cls, translation: _Triplet = _zvec,
-                    rotation: _Triplet = _zvec,
-                    sparse: bool = True,
-                    dtype=np.float32) -> "Transform":
+    def from_rotvec(
+        cls, translation: _Triplet = _zvec, rotation: _Triplet = _zvec, sparse: bool = True, dtype=np.float32
+    ) -> "Transform":
         """Build a Transform using Translation and Rotation vectors.
 
         Parameters
@@ -131,15 +129,18 @@ class Transform:
             The dtype to save the matrix as.
 
         """
-        return cls(translation=translation,
-                   rotation=Rotation.from_rotvec(rotation).as_matrix(),
-                   sparse=sparse, dtype=dtype)
+        return cls(
+            translation=translation, rotation=Rotation.from_rotvec(rotation).as_matrix(), sparse=sparse, dtype=dtype
+        )
 
     @classmethod
-    def from_rotation(cls, translation: _Triplet = _zvec,
-                      rotation: Rotation = Rotation.from_rotvec([0., 0., 0.]),
-                      sparse: bool = True,
-                      dtype=np.float32) -> "Transform":
+    def from_rotation(
+        cls,
+        translation: _Triplet = _zvec,
+        rotation: Rotation = Rotation.from_rotvec([0.0, 0.0, 0.0]),
+        sparse: bool = True,
+        dtype=np.float32,
+    ) -> "Transform":
         """Build a Transform using a Translation vector and a Rotation object.
 
         Parameters
@@ -154,42 +155,31 @@ class Transform:
             The dtype to save the matrix as.
 
         """
-        return cls(translation=translation, rotation=rotation.as_matrix(),
-                   sparse=sparse, dtype=dtype)
+        return cls(translation=translation, rotation=rotation.as_matrix(), sparse=sparse, dtype=dtype)
 
     @property
     def translation(self) -> np.ndarray:
-        """The translation part of the transform
-
-        """
+        """The translation part of the transform"""
         return self.dense_matrix[:-1, -1].reshape((3, 1))
 
     @property
     def rotation(self) -> Rotation:
-        """Get the rotation part of the transform.
-
-        """
+        """Get the rotation part of the transform."""
         return Rotation.from_matrix(self.dense_matrix[:-1, :-1])
 
     @property
     def rotmat(self) -> np.ndarray:
-        """The rotation matrix part of the matrix.
-
-        """
+        """The rotation matrix part of the matrix."""
         return self.matrix[:-1, :-1]
 
     @property
     def dense_matrix(self) -> np.ndarray:
-        """Get a dense matrix representation of the transformation.
-
-        """
+        """Get a dense matrix representation of the transformation."""
         return np.asarray(self.matrix.todense() if self.is_sparse() else self.matrix)
 
     @property
     def dtype(self):
-        """Get the dtype set for the matrix.
-
-        """
+        """Get the dtype set for the matrix."""
         return self.matrix.dtype
 
     def __eq__(self, other: "Transform") -> bool:
@@ -204,9 +194,11 @@ class Transform:
         return hash(tuple(self.dense_matrix.flatten().round(PRECISION)))
 
     def __repr__(self) -> str:
-        return f'Transform<rotation: {self.rotation.as_rotvec()}, ' \
-               f'translation:{self.translation.reshape((3,))}, ' \
-               f'sparse: {self.is_sparse()}>'
+        return (
+            f"Transform<rotation: {self.rotation.as_rotvec()}, "
+            f"translation:{self.translation.reshape((3,))}, "
+            f"sparse: {self.is_sparse()}>"
+        )
 
     def inv(self) -> "Transform":
         """Return the inverse transform of this one, such that applying one
@@ -230,7 +222,7 @@ class Transform:
         return self != identity
 
 
-identity = Transform.from_matrix(iden(4, dtype=np.float32, format='csr'))
-counterclockwise_90deg = rotate90 = Transform.from_rotvec(rotation=(0., 0., np.pi / 2))
-rotate180 = Transform.from_rotvec(rotation=(0., 0., np.pi))
-rotate270 = Transform.from_rotvec(rotation=(0., 0., 3 * np.pi / 2))
+identity = Transform.from_matrix(iden(4, dtype=np.float32, format="csr"))
+counterclockwise_90deg = rotate90 = Transform.from_rotvec(rotation=(0.0, 0.0, np.pi / 2))
+rotate180 = Transform.from_rotvec(rotation=(0.0, 0.0, np.pi))
+rotate270 = Transform.from_rotvec(rotation=(0.0, 0.0, 3 * np.pi / 2))

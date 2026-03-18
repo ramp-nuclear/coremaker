@@ -26,12 +26,14 @@ class CartesianLattice(Lattice):
 
     ser_identifier = "CartLattice"
 
-    def __init__(self, center: tuple[cm, cm, cm],
-                 shape: tuple[int, int],
-                 dimensions: tuple[cm, cm],
-                 height: cm | None,
-                 mixture: Mixture,
-                 ):
+    def __init__(
+        self,
+        center: tuple[cm, cm, cm],
+        shape: tuple[int, int],
+        dimensions: tuple[cm, cm],
+        height: cm | None,
+        mixture: Mixture,
+    ):
         self.transform = Transform(center)
         self._shape = np.array(shape, dtype=int)
         self.dimensions = np.array(dimensions, dtype=float)
@@ -39,30 +41,34 @@ class CartesianLattice(Lattice):
         self.mixture = mixture
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
-        return self.ser_identifier, {"center": self.origin.tolist(),
-                                     "shape": self._shape.tolist(),
-                                     "dimensions": self.dimensions.tolist(),
-                                     "height": self.height,
-                                     "mixture": self.mixture.serialize()
-                                     }
+        return self.ser_identifier, {
+            "center": self.origin.tolist(),
+            "shape": self._shape.tolist(),
+            "dimensions": self.dimensions.tolist(),
+            "height": self.height,
+            "mixture": self.mixture.serialize(),
+        }
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
         mixture = deserialize_default(d["mixture"], supported=supported, default=ConcMixture)
-        return cls(center=tuple(d["center"]),
-                   shape=tuple(d["shape"]),
-                   dimensions=tuple(d["dimensions"]),
-                   height=d["height"],
-                   mixture=mixture
-                   )
+        return cls(
+            center=tuple(d["center"]),
+            shape=tuple(d["shape"]),
+            dimensions=tuple(d["dimensions"]),
+            height=d["height"],
+            mixture=mixture,
+        )
 
     def __eq__(self, other: "CartesianLattice") -> bool:
         if not isinstance(other, CartesianLattice):
             return NotImplemented
-        return (self.transform == other.transform
-                and np.all(self._shape == other._shape)
-                and np.allclose(self.dimensions, other.dimensions)
-                and self.mixture == other.mixture)
+        return (
+            self.transform == other.transform
+            and np.all(self._shape == other._shape)
+            and np.allclose(self.dimensions, other.dimensions)
+            and self.mixture == other.mixture
+        )
 
     def __hash__(self) -> int:
         return hash((self.transform, tuple(self._shape), tuple(self.dimensions)))
@@ -105,8 +111,8 @@ class CartesianLattice(Lattice):
 
         """
         shift = np.zeros(3)
-        shift[:-1] = (2 * np.array(index)[::-1] + 1 - self._shape)
-        dim3d = np.hstack((self.dimensions, [0.]))
+        shift[:-1] = 2 * np.array(index)[::-1] + 1 - self._shape
+        dim3d = np.hstack((self.dimensions, [0.0]))
         # Safe because we know shift, dim3d are of length 3
         return tuple((shift * dim3d / 2))  # type: ignore
 
@@ -115,8 +121,8 @@ class CartesianLattice(Lattice):
         dimensions_2d: tuple[float, float] = self.dimensions * self._shape
         if self.height:
             dimensions: tuple[float, float, float] = (*dimensions_2d, self.height)  # type: ignore
-            return Box((0.,) * 3, dimensions)
-        return Rectangle((0.,) * 2, dimensions_2d)
+            return Box((0.0,) * 3, dimensions)
+        return Rectangle((0.0,) * 2, dimensions_2d)
 
     geometry.__doc__ = Lattice.geometry.__doc__
 
@@ -124,16 +130,18 @@ class CartesianLattice(Lattice):
     def inner_geometry(self) -> Box | Rectangle:
         if self.height:
             dimensions_3d: tuple[float, float, float] = (*self.dimensions, self.height)  # type: ignore
-            return Box((0., 0., 0.), dimensions_3d)
-        return Rectangle((0., 0.), tuple(self.dimensions))
+            return Box((0.0, 0.0, 0.0), dimensions_3d)
+        return Rectangle((0.0, 0.0), tuple(self.dimensions))
 
     inner_geometry.__doc__ = Lattice.inner_geometry.__doc__
 
     def __repr__(self) -> str:
-        return f'CartesianLattice<Center: {comma_format(self.origin)}, ' \
-               f'Shape: {tuple(self._shape)}, ' \
-               f'Dimensions: {comma_format(self.dimensions)}, ' \
-               f'Mixture: {self.mixture}>'
+        return (
+            f"CartesianLattice<Center: {comma_format(self.origin)}, "
+            f"Shape: {tuple(self._shape)}, "
+            f"Dimensions: {comma_format(self.dimensions)}, "
+            f"Mixture: {self.mixture}>"
+        )
 
 
 def default_hexagonal_index_position(index: tuple[int, int]) -> tuple[float, float]:
@@ -192,14 +200,16 @@ class HexagonalLattice(Lattice):
 
     ser_identifier = "HexLattice"
 
-    def __init__(self,
-                 center: tuple[cm, cm, cm],
-                 shape: tuple[int, int],
-                 pitch: cm,
-                 height: cm,
-                 outer_radius: cm,
-                 mixture: Mixture,
-                 index_position: Callable[[tuple[int, int]], tuple[float, float]] = default_hexagonal_index_position):
+    def __init__(
+        self,
+        center: tuple[cm, cm, cm],
+        shape: tuple[int, int],
+        pitch: cm,
+        height: cm,
+        outer_radius: cm,
+        mixture: Mixture,
+        index_position: Callable[[tuple[int, int]], tuple[float, float]] = default_hexagonal_index_position,
+    ):
         self.transform = Transform(center)
         self._shape = np.array(shape)
         self.pitch = pitch
@@ -211,33 +221,37 @@ class HexagonalLattice(Lattice):
     def serialize(self) -> tuple[str, dict[str, Any]]:
         if self.index_position != default_hexagonal_index_position:
             raise TypeError("We currently do not support serialization for non-default index_position")
-        return self.ser_identifier, {"center": self.origin.tolist(),
-                                     "shape": [int(v) for v in self._shape.tolist()],
-                                     "pitch": self.pitch,
-                                     "height": self.height,
-                                     "outer_radius": self.outer_radius,
-                                     "mixture": self.mixture.serialize(),
-                                     }
+        return self.ser_identifier, {
+            "center": self.origin.tolist(),
+            "shape": [int(v) for v in self._shape.tolist()],
+            "pitch": self.pitch,
+            "height": self.height,
+            "outer_radius": self.outer_radius,
+            "mixture": self.mixture.serialize(),
+        }
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
         mixture = deserialize_default(d["mixture"], supported=supported, default=ConcMixture)
-        return cls(center=tuple(d["center"]),
-                   shape=tuple(d["shape"]),
-                   pitch=d["pitch"],
-                   height=d["height"],
-                   outer_radius=d["outer_radius"],
-                   mixture=mixture,
-                   )
+        return cls(
+            center=tuple(d["center"]),
+            shape=tuple(d["shape"]),
+            pitch=d["pitch"],
+            height=d["height"],
+            outer_radius=d["outer_radius"],
+            mixture=mixture,
+        )
 
     def __eq__(self, other: "HexagonalLattice") -> bool:
         if not isinstance(other, HexagonalLattice):
             return NotImplemented
-        return (self.transform == other.transform
-                and np.all(self._shape == other._shape)
-                and np.isclose(self.pitch, other.pitch)
-                and np.isclose(self.outer_radius, other.outer_radius)
-                and self.mixture == other.mixture)
+        return (
+            self.transform == other.transform
+            and np.all(self._shape == other._shape)
+            and np.isclose(self.pitch, other.pitch)
+            and np.isclose(self.outer_radius, other.outer_radius)
+            and self.mixture == other.mixture
+        )
 
     def __hash__(self) -> int:
         return hash((self.transform, tuple(self._shape), self.pitch, self.outer_radius, self.height))
@@ -276,24 +290,26 @@ class HexagonalLattice(Lattice):
 
         """
 
-        dim3d = (self.pitch, self.pitch, 0.)
-        rule = (index[1] / 2 + index[0], index[1] * np.sqrt(3) / 2, 0.)
+        dim3d = (self.pitch, self.pitch, 0.0)
+        rule = (index[1] / 2 + index[0], index[1] * np.sqrt(3) / 2, 0.0)
         return tuple(float(r * d) for r, d in zip(rule, dim3d))  # type: ignore  # Safe because we made them of length 3
 
     @property
     def geometry(self) -> FiniteCylinder:
-        return FiniteCylinder((0., 0., 0.), self.outer_radius, self.height, (0, 0, 1))
+        return FiniteCylinder((0.0, 0.0, 0.0), self.outer_radius, self.height, (0, 0, 1))
 
     geometry.__doc__ = Lattice.geometry.__doc__
 
     @property
     def inner_geometry(self) -> HexPrism:
-        return HexPrism((0., 0., 0.), self.pitch, self.height)
+        return HexPrism((0.0, 0.0, 0.0), self.pitch, self.height)
 
     inner_geometry.__doc__ = Lattice.inner_geometry.__doc__
 
     def __repr__(self) -> str:
-        return f'HexagonalLattice<Center: {comma_format(self.origin)}, ' \
-               f'Shape: {tuple(self._shape)}, ' \
-               f'Pitch: {self.pitch}, ' \
-               f'Mixture: {self.mixture}>'
+        return (
+            f"HexagonalLattice<Center: {comma_format(self.origin)}, "
+            f"Shape: {tuple(self._shape)}, "
+            f"Pitch: {self.pitch}, "
+            f"Mixture: {self.mixture}>"
+        )

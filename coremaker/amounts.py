@@ -33,7 +33,8 @@ def nd_to_kg(isotope: Isotope, nd: barn_cm_inv, volume: cm3) -> kg:
     return isotope.mass / avogadro * nd * volume / 1000
 
 
-def _zero(): return 0.
+def _zero():
+    return 0.0
 
 
 @dispatch(Component)
@@ -41,9 +42,12 @@ def parse_amounts(component: Component) -> dict[Isotope, kg]:
     amounts = Counter()
     volume = component.geometry.volume
     amounts.update(
-        {isotope: nd_to_kg(isotope, nd, volume) for
-         isotope, nd in component.mixture.isotopes.items() if
-         isinstance(isotope, Isotope)})
+        {
+            isotope: nd_to_kg(isotope, nd, volume)
+            for isotope, nd in component.mixture.isotopes.items()
+            if isinstance(isotope, Isotope)
+        }
+    )
     return amounts
 
 
@@ -77,18 +81,16 @@ def parse_amounts(core: Core, isotope: Isotope) -> kg:
     """
     return total amounts of a specific isotope in the core
     """
-    return parse_amounts(core).get(isotope, 0.)
+    return parse_amounts(core).get(isotope, 0.0)
 
 
 @dispatch(Core, ZAID, float)
 def parse_amounts(core: Core, isotope: ZAID, mass: float) -> kg:
-    """Return total amount of a specific ZAID, given its mass.
-    """
+    """Return total amount of a specific ZAID, given its mass."""
     return mass * parse_numeric_amount(core, isotope) / avogadro / 1000
 
 
-def parse_numeric_amount(core: Core, isotope: ZAID,
-                         allow_nan: bool = False) -> float:
+def parse_numeric_amount(core: Core, isotope: ZAID, allow_nan: bool = False) -> float:
     """Parse the numeric amount of an isotope in the core.
 
     Parameters
@@ -99,6 +101,9 @@ def parse_numeric_amount(core: Core, isotope: ZAID,
                 are ignored, which gives a numeric amount but maybe a wrong one.
 
     """
-    return sum(vol * comp.mixture.get(isotope, 0.)
-               for element in core.all_elements for comp in element.components()
-               if not isnan(vol := (comp.geometry.volume or np.nan)) or allow_nan)
+    return sum(
+        vol * comp.mixture.get(isotope, 0.0)
+        for element in core.all_elements
+        for comp in element.components()
+        if not isnan(vol := (comp.geometry.volume or np.nan)) or allow_nan
+    )

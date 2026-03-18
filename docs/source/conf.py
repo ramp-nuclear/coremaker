@@ -13,13 +13,13 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../tests/'))
+sys.path.insert(0, os.path.abspath("../../tests/"))
 
 # -- Project information -----------------------------------------------------
 
-project = 'CoreMaker'
-copyright = '2022'
-author = 'People'
+project = "CoreMaker"
+copyright = "2022"
+author = "People"
 
 
 # -- General configuration ---------------------------------------------------
@@ -49,7 +49,7 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -73,7 +73,7 @@ html_theme_options = dict(
     includehidden=True,
     # titles_only=,
     logo_only=True,
-    display_version=True,
+    version_selector=True,
     prev_next_buttons_location="bottom",
     style_external_links=False,
     # style_nav_header_background=,
@@ -85,4 +85,4 @@ html_last_updated_fmt = ""
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]

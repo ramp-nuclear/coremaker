@@ -1,6 +1,5 @@
-"""Utilities for elements.
+"""Utilities for elements."""
 
-"""
 import math
 from pathlib import PurePath
 from typing import Generator, Iterable
@@ -13,8 +12,7 @@ from coremaker.transform import Transform, identity
 from coremaker.tree import Node, Tree
 
 
-def appropriate_resolution(dimensions: Iterable[float], splits: Iterable[int]) \
-        -> Generator[float, None, None]:
+def appropriate_resolution(dimensions: Iterable[float], splits: Iterable[int]) -> Generator[float, None, None]:
     """
     Return the appropriate resolution in each dimension to produce the splitting
     defined by the input split.
@@ -30,13 +28,13 @@ def appropriate_resolution(dimensions: Iterable[float], splits: Iterable[int]) \
     -------
     Dimensional resolution of a piece of geometry, in the same length units.
     """
-    return (length * (1 / (cells_num - 1) + 1 / cells_num) / 2
-            if cells_num > 1 else math.inf
-            for length, cells_num in zip(dimensions, splits))
+    return (
+        length * (1 / (cells_num - 1) + 1 / cells_num) / 2 if cells_num > 1 else math.inf
+        for length, cells_num in zip(dimensions, splits)
+    )
 
 
-def split(dimensions: Iterable[float], resolution: Iterable[float]
-          ) -> Generator[int, None, None]:
+def split(dimensions: Iterable[float], resolution: Iterable[float]) -> Generator[int, None, None]:
     """Return the amount each dimension needs to be split in according to its
     resolution.
 
@@ -52,17 +50,15 @@ def split(dimensions: Iterable[float], resolution: Iterable[float]
     The amount of pieces to have in each dimension.
 
     """
-    return (int(d/r)+1 for d, r in zip(dimensions, resolution))
+    return (int(d / r) + 1 for d, r in zip(dimensions, resolution))
 
 
-def symmetric_spacing(points: int,
-                      step_vector: np.ndarray,
-                      origin: np.ndarray = np.zeros(3)) -> list[np.ndarray]:
+def symmetric_spacing(points: int, step_vector: np.ndarray, origin: np.ndarray = np.zeros(3)) -> list[np.ndarray]:
     # noinspection PyShadowingNames
     """Symmetrically positioned and evenly spaced locations around the origin.
 
     Evenly spaces points in 3D around some point along some line.
-    
+
     Exampels
     ---------
     >>> from numpy import array
@@ -76,8 +72,7 @@ def symmetric_spacing(points: int,
     return list(tile - np.mean(tile, axis=0) + origin)
 
 
-def single_node_tree(geometry: Geometry, mixture: Mixture, path: PurePath,
-                     transform: Transform = identity) -> Tree:
+def single_node_tree(geometry: Geometry, mixture: Mixture, path: PurePath, transform: Transform = identity) -> Tree:
     """
     function that creates a tree containing a single node.
 
@@ -99,6 +94,5 @@ def single_node_tree(geometry: Geometry, mixture: Mixture, path: PurePath,
 
     """
     tree = Tree()
-    tree.nodes[path] = Node(geometry=geometry, mixture=mixture,
-                            transform=transform)
+    tree.nodes[path] = Node(geometry=geometry, mixture=mixture, transform=transform)
     return tree

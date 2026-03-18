@@ -8,13 +8,13 @@ from coremaker.tree import Tree
 
 
 def serialize_contents(d: dict[Site, Element]) -> dict[Site, tuple[str, dict[str, Any]]]:
-    """Serialize a dictionary of grid contents
-
-    """
+    """Serialize a dictionary of grid contents"""
     return {site: elem.serialize() for site, elem in d.items()}
 
-def deserialize_contents(d: dict[Site, tuple[str, dict[str, Any]]],
-                         supported: dict[str, Type[Serializable]]) -> dict[Site, Element]:
+
+def deserialize_contents(
+    d: dict[Site, tuple[str, dict[str, Any]]], supported: dict[str, Type[Serializable]]
+) -> dict[Site, Element]:
     """Deserialize a dictionary of grid contents
 
     Parameters
@@ -33,5 +33,4 @@ def deserialize_contents(d: dict[Site, tuple[str, dict[str, Any]]],
 
     # Safe because we assume people gave us elements to begin with
     # noinspection PyTypeChecker
-    return {site: deserialize_default(v, supported=supported, default=Tree)
-            for site, v in d.items()}
+    return {site: deserialize_default(v, supported=supported, default=Tree) for site, v in d.items()}

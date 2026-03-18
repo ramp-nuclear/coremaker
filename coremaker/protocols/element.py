@@ -3,6 +3,7 @@ The underlying protocol is used for defining what kind of object adapters
 have to deal with.
 
 """
+
 from pathlib import PurePath
 from typing import Iterable, Protocol, Tuple
 
@@ -87,8 +88,7 @@ class Element(Serializable, Protocol):
 
     @property
     def outer_geometry(self) -> Geometry:
-        """The geometry that encompasses the element.
-        """
+        """The geometry that encompasses the element."""
         raise NotImplementedError("Not implemented for general elements.")
 
     def __getitem__(self, key: PurePath):

@@ -6,6 +6,7 @@ that the concrete Mixture class in :class:`coremaker.protocols.mixture.Mixture`
 is general enough for all known use cases.
 
 """
+
 from enum import Enum, auto
 from typing import Hashable, Protocol, Sequence
 
@@ -15,9 +16,7 @@ from ramp_core.serializable import Serializable
 
 
 class Chemical(Enum):
-    """Known chemicals that can affect isotopic cross-sections.
-
-    """
+    """Known chemicals that can affect isotopic cross-sections."""
 
     Be = auto()
     Be_in_BeO = auto()
@@ -31,16 +30,19 @@ class Chemical(Enum):
     @property
     def isotopes(self):
         """which isotopes this chemical affect"""
-        return tuple(Isotope.from_name(x) for x in {
-            'Be': ('Be9', 'Be'),
-            'Be_in_BeO': ('Be9', 'Be'),
-            'O_in_BeO': ('O16', 'O'),
-            "Benzene": ('C', 'C12'),
-            'Graphite': ('C', 'C12'),
-            'LightWater': ('H1', 'H'),
-            'HeavyWater': ('H2', 'H'),
-            'Polyethylene': ('H1', 'H'),
-        }[self.name])
+        return tuple(
+            Isotope.from_name(x)
+            for x in {
+                "Be": ("Be9", "Be"),
+                "Be_in_BeO": ("Be9", "Be"),
+                "O_in_BeO": ("O16", "O"),
+                "Benzene": ("C", "C12"),
+                "Graphite": ("C", "C12"),
+                "LightWater": ("H1", "H"),
+                "HeavyWater": ("H2", "H"),
+                "Polyethylene": ("H1", "H"),
+            }[self.name]
+        )
 
 
 class Mixture(Serializable, Hashable, Protocol):
@@ -59,10 +61,9 @@ class Mixture(Serializable, Hashable, Protocol):
     def __bool__(self) -> bool:
         return bool(self.isotopes)
 
-    def __eq__(self, other: "Mixture") -> bool:
-        ...
+    def __eq__(self, other: "Mixture") -> bool: ...
 
-    def get(self, k: ZAID, default=0., /) -> float:
+    def get(self, k: ZAID, default=0.0, /) -> float:
         """Get the density of a specific isotope in the mixture.
 
         Parameters
@@ -90,14 +91,14 @@ def are_close(mix1: Mixture, mix2: Mixture) -> bool:
     mix2: Mixture
 
     """
-    return (frozenset(mix1.sab) == frozenset(mix2.sab)
-            and np.isclose(mix1.temperature, mix2.temperature, rtol=1e-2, atol=1e-2)
-            and round_densities(mix1.isotopes) == round_densities(mix2.isotopes)
-            )
+    return (
+        frozenset(mix1.sab) == frozenset(mix2.sab)
+        and np.isclose(mix1.temperature, mix2.temperature, rtol=1e-2, atol=1e-2)
+        and round_densities(mix1.isotopes) == round_densities(mix2.isotopes)
+    )
 
 
-def round_densities(isotopes: dict[ZAID, float],
-                    decimals: int = 12) -> dict[ZAID, float]:
+def round_densities(isotopes: dict[ZAID, float], decimals: int = 12) -> dict[ZAID, float]:
     """Round up the densities in a dictionary, so comparison can be done on the
     values up to the given wanted precision.
 

@@ -27,6 +27,7 @@ class SurfaceCache:
     3. If a surface is not in the collection but encountered, it is added.
     4. Some surfaces are preferable over their matching negative surface.
     """
+
     COARSE_PRECISION = 3
 
     def __init__(self, separate_surfaces: Callable[[Level], bool]):
@@ -50,23 +51,22 @@ class SurfaceCache:
         ----------
         x: float
         """
-        factor = (10 ** cls.COARSE_PRECISION)
+        factor = 10**cls.COARSE_PRECISION
         xm, xp = floor(x * factor) / factor, ceil(x * factor) / factor
         if xm == xp:
-            return xm,
+            return (xm,)
         return xm, xp
 
     @staticmethod
     def is_preferable(s: Surface) -> bool:
-        """Whether a surface s is preferable over -s
-        """
+        """Whether a surface s is preferable over -s"""
         match s:
             case Plane():
                 return sum(s.a) >= 0
             case Cylinder() | Sphere():
                 return not s.inside
             case _:
-                raise TypeError(f'unknown surface type {type(s)}')
+                raise TypeError(f"unknown surface type {type(s)}")
 
     def calculate_keys(self, surface: Surface) -> tuple[Hashable, ...]:
         """Calculate heuristics keys that have the following property:
@@ -81,41 +81,48 @@ class SurfaceCache:
                 a = a / n
                 b = surface.b / n
 
-                return tuple(('p', *item)
-                             for item in it.product(self.interval(a[0]),
-                                                    self.interval(a[1]),
-                                                    self.interval(a[2]),
-                                                    self.interval(b)))
+                return tuple(
+                    ("p", *item)
+                    for item in it.product(
+                        self.interval(a[0]), self.interval(a[1]), self.interval(a[2]), self.interval(b)
+                    )
+                )
             case Cylinder():
                 surface: Cylinder
                 center = np.array(surface.center)
                 axis = np.array(surface.axis)
                 axis = axis / norm2(axis)
                 center = center - (axis @ center) * axis
-                return tuple(('c',
-                              surface.inside,
-                              *item,
-                              frozenset([(x0, x1, x2), (-x0, -x1, -x2)]),
-                              )
-                             for (*item, x0, x1, x2) in it.product(self.interval(surface.radius),
-                                                                   self.interval(center[0]),
-                                                                   self.interval(center[1]),
-                                                                   self.interval(center[2]),
-                                                                   self.interval(axis[0]),
-                                                                   self.interval(axis[1]),
-                                                                   self.interval(axis[2]),
-                                                                   )
-                             )
+                return tuple(
+                    (
+                        "c",
+                        surface.inside,
+                        *item,
+                        frozenset([(x0, x1, x2), (-x0, -x1, -x2)]),
+                    )
+                    for (*item, x0, x1, x2) in it.product(
+                        self.interval(surface.radius),
+                        self.interval(center[0]),
+                        self.interval(center[1]),
+                        self.interval(center[2]),
+                        self.interval(axis[0]),
+                        self.interval(axis[1]),
+                        self.interval(axis[2]),
+                    )
+                )
             case Sphere():
                 surface: Sphere
-                return tuple(('s', surface.inside, *item)
-                             for item in it.product(self.interval(surface.radius),
-                                                    self.interval(surface.center[0]),
-                                                    self.interval(surface.center[1]),
-                                                    self.interval(surface.center[2]),
-                                                    ))
+                return tuple(
+                    ("s", surface.inside, *item)
+                    for item in it.product(
+                        self.interval(surface.radius),
+                        self.interval(surface.center[0]),
+                        self.interval(surface.center[1]),
+                        self.interval(surface.center[2]),
+                    )
+                )
             case _:
-                raise TypeError(f'unknown surface type {type(surface)}')
+                raise TypeError(f"unknown surface type {type(surface)}")
 
     def add_surface(self, surface: Surface, level: Level) -> SurfaceIndex:
         """Add a surface to the collection and return its index.
@@ -184,6 +191,6 @@ class SurfaceCache:
             ind, s = x
             return -ind, s
         if error:
-            raise LookupError('Surface not found.')
+            raise LookupError("Surface not found.")
         index = self.add_surface(surface, lev)
         return index, -surface if index < 0 else surface

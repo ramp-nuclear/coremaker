@@ -8,15 +8,12 @@ from coremaker.transform import Transform
 
 
 class NodeLike(Serializable, Protocol):
-    """The information one has to include to be a Node for all intents and purposes.
+    """The information one has to include to be a Node for all intents and purposes."""
 
-    """
     transform: Transform
     mixture: Mixture | None
 
     @property
     def geometry(self) -> Geometry:
-        """Gets the geometry of the nodelike.
-
-        """
+        """Gets the geometry of the nodelike."""
         raise NotImplementedError("This is not implemented on the protocol.")

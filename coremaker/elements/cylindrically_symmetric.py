@@ -286,7 +286,7 @@ def ChunkedCylinderTree(
     resolution: tuple[cm, cm]
         The radial resolution and axial resolution of the cylinder, respectively.
         The resolution defines the maximal size of a piece in the corresponding
-            direction.
+        direction.
     center:
         The location of the center compared to the origin in cm.
     """

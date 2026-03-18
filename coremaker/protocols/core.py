@@ -1,6 +1,5 @@
-"""The general protocol other packages should rely on when dealing with a Core.
+"""The general protocol other packages should rely on when dealing with a Core."""
 
-"""
 from pathlib import PurePath
 from typing import Iterable, MutableMapping, Protocol, Sequence
 
@@ -61,8 +60,7 @@ class Core(Serializable, Protocol):
         for key in keys:
             yield self.grid[key]
 
-    def __getitem__(self, key: PurePath | Site) -> NodeLike:
-        ...
+    def __getitem__(self, key: PurePath | Site) -> NodeLike: ...
 
     def site_transform(self, site: Site) -> Transform:
         """Gets the absolute transform of a grid site.
@@ -105,32 +103,25 @@ class Core(Serializable, Protocol):
         return self[path].geometry.transform(self.transform_of(path))
 
     def lattices(self) -> Iterable[tuple[PurePath, Transform, Lattice]]:
-        """Yields triplets of lattice name, where it is and the lattice itself.
-
-        """
+        """Yields triplets of lattice name, where it is and the lattice itself."""
         raise NotImplementedError("This is not implemented at the protocol level")
 
     @property
     def free_elements(self) -> Iterable[tuple[str, Element]]:
-        """An iterable over the core elements that are not in the grid
-        """
+        """An iterable over the core elements that are not in the grid"""
         raise NotImplementedError("This is not implemented at the protocol level")
 
     @property
     def all_elements(self) -> Iterable[Element]:
-        """An iterable over all the core elements, in the grid or otherwise.
-
-        """
+        """An iterable over all the core elements, in the grid or otherwise."""
         yield from (elem for _, elem in self.free_elements)
         yield from self.grid.values()
 
     @property
     def named_components(self) -> Iterable[tuple[PurePath, Component]]:
-        """An iterable over all the components and their paths
-        """
+        """An iterable over all the components and their paths"""
         for root, elem in self.grid.items():
-            for path, comp in elem.named_components(transform=
-                                                    self.site_transform(root)):
+            for path, comp in elem.named_components(transform=self.site_transform(root)):
                 yield PurePath(root) / path, comp
         for root, elem in self.free_elements:
             for path, comp in elem.named_components():

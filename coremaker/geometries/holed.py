@@ -1,6 +1,5 @@
-"""A concrete implementation of the holed geometry protocol
+"""A concrete implementation of the holed geometry protocol"""
 
-"""
 from typing import Any, Sequence, Type, TypeVar
 
 try:
@@ -16,15 +15,14 @@ from coremaker.transform import Transform
 
 
 class ConcreteHoledGeometry(Serializable):
-    """A geometry that is defined with some surfaces excluded.
-    """
+    """A geometry that is defined with some surfaces excluded."""
 
     ser_identifier = "HoledGeometry"
-    __slots__ = ['inclusive', 'internal_exclusives', 'external_exclusives', 'exclusives']
+    __slots__ = ["inclusive", "internal_exclusives", "external_exclusives", "exclusives"]
 
-    def __init__(self, inclusive: Geometry,
-                 internal_exclusives: Sequence[Geometry],
-                 external_exclusives: Sequence[Geometry] = ()):
+    def __init__(
+        self, inclusive: Geometry, internal_exclusives: Sequence[Geometry], external_exclusives: Sequence[Geometry] = ()
+    ):
         """
         Parameters
         ----------
@@ -42,9 +40,7 @@ class ConcreteHoledGeometry(Serializable):
 
     @property
     def volume(self) -> float | None:
-        """The volume within the geometry.
-
-        """
+        """The volume within the geometry."""
         if self.external_exclusives:
             return None
         try:
@@ -54,11 +50,8 @@ class ConcreteHoledGeometry(Serializable):
 
     @property
     def surfaces(self) -> list[Surface]:
-        """Return a list of all surfaces, exclusive or inclusive.
-
-        """
-        return (list(self.inclusive.surfaces)
-                + sum((list(g.surfaces) for g in self.exclusives), []))
+        """Return a list of all surfaces, exclusive or inclusive."""
+        return list(self.inclusive.surfaces) + sum((list(g.surfaces) for g in self.exclusives), [])
 
     def __repr__(self) -> str:
         return f"HoledGeometry({self.inclusive}, {self.exclusives})"
@@ -75,21 +68,25 @@ class ConcreteHoledGeometry(Serializable):
             The transformation to apply.
 
         """
-        return type(self)(self.inclusive.transform(transform),
-                          [g.transform(transform) for g in self.internal_exclusives],
-                          [g.transform(transform) for g in self.external_exclusives])
+        return type(self)(
+            self.inclusive.transform(transform),
+            [g.transform(transform) for g in self.internal_exclusives],
+            [g.transform(transform) for g in self.external_exclusives],
+        )
 
     def _comparable(self):
-        return {"inclusive": self.inclusive,
-                "internal_exclusives": frozenset(self.internal_exclusives),
-                "external_exclusives": frozenset(self.external_exclusives),
-                }
+        return {
+            "inclusive": self.inclusive,
+            "internal_exclusives": frozenset(self.internal_exclusives),
+            "external_exclusives": frozenset(self.external_exclusives),
+        }
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
-        data = dict(inclusive=self.inclusive.serialize(),
-                    internal_exclusives=[g.serialize() for g in self.internal_exclusives],
-                    external_exclusives=[g.serialize() for g in self.external_exclusives],
-                    )
+        data = dict(
+            inclusive=self.inclusive.serialize(),
+            internal_exclusives=[g.serialize() for g in self.internal_exclusives],
+            external_exclusives=[g.serialize() for g in self.external_exclusives],
+        )
         return self.ser_identifier, data
 
     @classmethod
@@ -106,4 +103,3 @@ class ConcreteHoledGeometry(Serializable):
 
     def __hash__(self):
         return hash(tuple(self._comparable().values()))
-

@@ -1,6 +1,5 @@
-"""A spherical surface.
+"""A spherical surface."""
 
-"""
 import math
 
 import numpy as np
@@ -18,14 +17,10 @@ class Sphere(Serializable):
     To understand most methods, see the :class:`~coremaker.protocols.surface.Surface` protocol.
     """
 
-    __slots__ = ['center', 'radius', 'inside']
+    __slots__ = ["center", "radius", "inside"]
     ser_identifier = "SurfSphere"
 
-    def __init__(self,
-                 center: tuple[cm, cm, cm],
-                 radius: cm,
-                 *,
-                 inside: bool):
+    def __init__(self, center: tuple[cm, cm, cm], radius: cm, *, inside: bool):
         """
 
         Parameters
@@ -47,16 +42,13 @@ class Sphere(Serializable):
     def __eq__(self, other) -> bool:
         if not isinstance(other, Sphere):
             return NotImplemented
-        return (np.all(self.center == other.center) and
-                (self.radius == other.radius) and
-                self.inside == other.inside)
+        return np.all(self.center == other.center) and (self.radius == other.radius) and self.inside == other.inside
 
     def __neg__(self) -> "Sphere":
         return Sphere(self.center, self.radius, inside=not self.inside)
 
     def transform(self, transform: Transform) -> "Sphere":
-        return Sphere(transform @ self.center,
-                      self.radius, inside=self.inside)
+        return Sphere(transform @ self.center, self.radius, inside=self.inside)
 
     def normal(self, point: tuple[cm, cm, cm]) -> tuple[cm, cm, cm]:
         result = np.array(point) - np.array(self.center)
@@ -68,11 +60,14 @@ class Sphere(Serializable):
     def isclose(self, other: "Sphere"):
         if not isinstance(other, Sphere):
             return False
-        return ((self.inside == other.inside)
-                and (math.isclose(self.radius, other.radius, rel_tol=0, abs_tol=1e-5))
-                and all(math.isclose(x, y, rel_tol=0, abs_tol=1e-5)
-                        for x, y in zip(self.center, other.center)))
+        return (
+            (self.inside == other.inside)
+            and (math.isclose(self.radius, other.radius, rel_tol=0, abs_tol=1e-5))
+            and all(math.isclose(x, y, rel_tol=0, abs_tol=1e-5) for x, y in zip(self.center, other.center))
+        )
 
     def __repr__(self) -> str:
-        return f"Sphere<Center: {comma_format(self.center)}, Radius: {self.radius:.3e}, " \
-               f"{'Internal' if self.inside else 'External'}>"
+        return (
+            f"Sphere<Center: {comma_format(self.center)}, Radius: {self.radius:.3e}, "
+            f"{'Internal' if self.inside else 'External'}>"
+        )

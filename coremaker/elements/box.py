@@ -1,6 +1,5 @@
-"""A tree based box element.
+"""A tree based box element."""
 
-"""
 import math
 from itertools import pairwise, product
 from pathlib import PurePath
@@ -15,59 +14,57 @@ from coremaker.transform import Transform, identity
 from coremaker.tree import ChildType, Node, Tree
 from coremaker.units import cm
 
-ORIGIN = (0., 0., 0.)
+ORIGIN = (0.0, 0.0, 0.0)
 
 
-def _framebox(*, picture: Tree,
-              frame_dimensions: np.ndarray,
-              picture_dimensions: np.ndarray,
-              frame_name: PurePath,
-              frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
-              frame_mixture: Mixture,
-              picture_translation: np.ndarray = np.array((0., 0., 0.)),
-              transform: Transform = identity) -> Tree:
+def _framebox(
+    *,
+    picture: Tree,
+    frame_dimensions: np.ndarray,
+    picture_dimensions: np.ndarray,
+    frame_name: PurePath,
+    frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
+    frame_mixture: Mixture,
+    picture_translation: np.ndarray = np.array((0.0, 0.0, 0.0)),
+    transform: Transform = identity,
+) -> Tree:
     element = Tree()
-    element.nodes[frame_name] = Node(Box(ORIGIN, tuple(frame_dimensions)),
-                                     transform=transform
-                                     )
+    element.nodes[frame_name] = Node(Box(ORIGIN, tuple(frame_dimensions)), transform=transform)
     element.graft(picture, frame_name, ChildType.inclusive)
-    for sign_vec in map(lambda x: np.array(x, ndmin=1),
-                        filter(any, product([-1, 0, 1], repeat=3))):
-        dimensions = ((frame_dimensions - picture_dimensions) / 2
-                      - sign_vec * picture_translation)
+    for sign_vec in map(lambda x: np.array(x, ndmin=1), filter(any, product([-1, 0, 1], repeat=3))):
+        dimensions = (frame_dimensions - picture_dimensions) / 2 - sign_vec * picture_translation
         unmoved = np.abs(sign_vec) == 0
         dimensions[unmoved] = picture_dimensions[unmoved]
-        if np.any(dimensions <= 0.):
+        if np.any(dimensions <= 0.0):
             continue
         center = picture_translation / 2 + sign_vec * (picture_dimensions + frame_dimensions) / 4
         center[unmoved] = picture_translation[unmoved]
-        name = PurePath(f'FramePiece: {tuple(sign_vec)}')
+        name = PurePath(f"FramePiece: {tuple(sign_vec)}")
         shift = Transform(translation=center)
-        frame_piece = (SplitBox(dimensions=dimensions,
-                                mixture=frame_mixture,
-                                name=name,
-                                resolution=frame_resolution,
-                                transform=shift)
-                       if any(v > 1 for v in split(dimensions, frame_resolution))
-                       else BoxTree(dimensions=dimensions,
-                                    mixture=frame_mixture,
-                                    name=name,
-                                    transform=shift))
+        frame_piece = (
+            SplitBox(
+                dimensions=dimensions, mixture=frame_mixture, name=name, resolution=frame_resolution, transform=shift
+            )
+            if any(v > 1 for v in split(dimensions, frame_resolution))
+            else BoxTree(dimensions=dimensions, mixture=frame_mixture, name=name, transform=shift)
+        )
         element.graft(frame_piece, frame_name, ChildType.inclusive)
     return element
 
 
-def FrameBox(*,
-             frame_dimensions: tuple[cm, cm, cm],
-             picture_dimensions: tuple[cm, cm, cm],
-             frame_name: PurePath,
-             picture_name: PurePath,
-             frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
-             picture_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
-             frame_mixture: Mixture,
-             picture_mixture: Mixture,
-             picture_translation: tuple[cm, cm, cm] = (0., 0., 0.),
-             transform: Transform = identity) -> Tree:
+def FrameBox(
+    *,
+    frame_dimensions: tuple[cm, cm, cm],
+    picture_dimensions: tuple[cm, cm, cm],
+    frame_name: PurePath,
+    picture_name: PurePath,
+    frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
+    picture_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
+    frame_mixture: Mixture,
+    picture_mixture: Mixture,
+    picture_translation: tuple[cm, cm, cm] = (0.0, 0.0, 0.0),
+    transform: Transform = identity,
+) -> Tree:
     """Create a frame from one material containing an internal box (a picture,
     in the analogy this is framed as) made from another material. The picture
     can be set anywhere inside the frame and both of them can be split with
@@ -118,42 +115,46 @@ def FrameBox(*,
     """
     picture_split = tuple(split(picture_dimensions, picture_resolution))
     picture_transform = Transform(translation=picture_translation)
-    picture = (SplitBox(dimensions=picture_dimensions,
-                        mixture=picture_mixture,
-                        name=picture_name,
-                        resolution=picture_resolution,
-                        transform=picture_transform)
-               if any(v > 1 for v in picture_split)
-               else BoxTree(dimensions=picture_dimensions,
-                            mixture=picture_mixture,
-                            name=picture_name,
-                            transform=picture_transform)
-               )
+    picture = (
+        SplitBox(
+            dimensions=picture_dimensions,
+            mixture=picture_mixture,
+            name=picture_name,
+            resolution=picture_resolution,
+            transform=picture_transform,
+        )
+        if any(v > 1 for v in picture_split)
+        else BoxTree(
+            dimensions=picture_dimensions, mixture=picture_mixture, name=picture_name, transform=picture_transform
+        )
+    )
     frame_dimensions = np.array(frame_dimensions)
     picture_dimensions = np.array(picture_dimensions)
     picture_translation = np.array(picture_translation)
-    return _framebox(picture=picture,
-                     frame_dimensions=frame_dimensions,
-                     picture_dimensions=picture_dimensions,
-                     frame_name=frame_name,
-                     frame_resolution=frame_resolution,
-                     frame_mixture=frame_mixture,
-                     picture_translation=picture_translation,
-                     transform=transform
-                     )
+    return _framebox(
+        picture=picture,
+        frame_dimensions=frame_dimensions,
+        picture_dimensions=picture_dimensions,
+        frame_name=frame_name,
+        frame_resolution=frame_resolution,
+        frame_mixture=frame_mixture,
+        picture_translation=picture_translation,
+        transform=transform,
+    )
 
 
-def ExcludeFrame(*,
-                 frame_dimensions: tuple[cm, cm, cm],
-                 picture_dimensions: tuple[cm, cm, cm],
-                 frame_name: PurePath,
-                 picture_name: PurePath,
-                 picture_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
-                 frame_mixture: Mixture,
-                 picture_mixture: Mixture,
-                 picture_translation: tuple[cm, cm, cm] = (0., 0., 0.),
-                 transform: Transform = identity
-                 ) -> Tree:
+def ExcludeFrame(
+    *,
+    frame_dimensions: tuple[cm, cm, cm],
+    picture_dimensions: tuple[cm, cm, cm],
+    frame_name: PurePath,
+    picture_name: PurePath,
+    picture_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
+    frame_mixture: Mixture,
+    picture_mixture: Mixture,
+    picture_translation: tuple[cm, cm, cm] = (0.0, 0.0, 0.0),
+    transform: Transform = identity,
+) -> Tree:
     """Create a frame from one material containing an internal box (a picture,
     in the analogy this is framed as) made from another material.
 
@@ -189,25 +190,27 @@ def ExcludeFrame(*,
     element = BoxTree(frame_dimensions, frame_mixture, frame_name, transform)
     picture_transform = Transform(translation=picture_translation)
     picture_split = tuple(split(picture_dimensions, picture_resolution))
-    picture = (SplitBox(dimensions=picture_dimensions,
-                        mixture=picture_mixture,
-                        name=picture_name,
-                        resolution=picture_resolution,
-                        transform=picture_transform)
-               if any(v > 1 for v in picture_split)
-               else BoxTree(dimensions=picture_dimensions,
-                            mixture=picture_mixture,
-                            name=picture_name,
-                            transform=picture_transform)
-               )
+    picture = (
+        SplitBox(
+            dimensions=picture_dimensions,
+            mixture=picture_mixture,
+            name=picture_name,
+            resolution=picture_resolution,
+            transform=picture_transform,
+        )
+        if any(v > 1 for v in picture_split)
+        else BoxTree(
+            dimensions=picture_dimensions, mixture=picture_mixture, name=picture_name, transform=picture_transform
+        )
+    )
     element.graft(picture, frame_name, ChildType.exclusive)
     return element
 
 
 def excludeframe_to_framebox(
-        excludeframe: Tree,
-        picture_name: PurePath,
-        frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
+    excludeframe: Tree,
+    picture_name: PurePath,
+    frame_resolution: tuple[cm, cm, cm] = (math.inf, math.inf, math.inf),
 ) -> Tree:
     """Convert an existing ExcludeFrame tree structure to a FrameBox tree structure.
 
@@ -246,21 +249,25 @@ def excludeframe_to_framebox(
     picture_root = list(picture.roots())[0][1]
     # Safe because we know the picture root geometry is a Box geometry
     picture_dimensions = picture_root.geometry.dimensions  # type:ignore
-    return _framebox(picture=picture,
-                     frame_dimensions=frame_dimensions,
-                     picture_dimensions=picture_dimensions,
-                     frame_name=frame_name,
-                     frame_resolution=frame_resolution,
-                     frame_mixture=frame_mixture,
-                     picture_translation=picture_translation,
-                     transform=excludeframe.get_transform(frame_name))
+    return _framebox(
+        picture=picture,
+        frame_dimensions=frame_dimensions,
+        picture_dimensions=picture_dimensions,
+        frame_name=frame_name,
+        frame_resolution=frame_resolution,
+        frame_mixture=frame_mixture,
+        picture_translation=picture_translation,
+        transform=excludeframe.get_transform(frame_name),
+    )
 
 
-def SplitBox(dimensions: tuple[cm, cm, cm],
-             mixture: Mixture,
-             name: PurePath,
-             resolution: tuple[cm, cm, cm],
-             transform: Transform = identity) -> Tree:
+def SplitBox(
+    dimensions: tuple[cm, cm, cm],
+    mixture: Mixture,
+    name: PurePath,
+    resolution: tuple[cm, cm, cm],
+    transform: Transform = identity,
+) -> Tree:
     """Create a split box Tree object.
 
     Parameters
@@ -288,29 +295,22 @@ def SplitBox(dimensions: tuple[cm, cm, cm],
 
     """
     element = Tree()
-    element.nodes[name] = Node(Box(ORIGIN, dimensions),
-                               transform=transform)
-    x, y, z = (np.linspace(- dimensions[i] / 2, + dimensions[i] / 2, num=splits + 1)
-               for i, splits in enumerate(split(dimensions, resolution)))
+    element.nodes[name] = Node(Box(ORIGIN, dimensions), transform=transform)
+    x, y, z = (
+        np.linspace(-dimensions[i] / 2, +dimensions[i] / 2, num=splits + 1)
+        for i, splits in enumerate(split(dimensions, resolution))
+    )
     for dx, dy, dz in product(pairwise(x), pairwise(y), pairwise(z)):
-        center = np.array((0.5 * (dx[0] + dx[1]),
-                           0.5 * (dy[0] + dy[1]),
-                           0.5 * (dz[0] + dz[1])))
+        center = np.array((0.5 * (dx[0] + dx[1]), 0.5 * (dy[0] + dy[1]), 0.5 * (dz[0] + dz[1])))
         subdim = (dx[1] - dx[0], dy[1] - dy[0], dz[1] - dz[0])
         subname = PurePath(f"Piece:({', '.join(f'{v:.4e}' for v in center)})")
-        newnode = Node(Box(ORIGIN, subdim),
-                       Transform(translation=center),
-                       mixture)
+        newnode = Node(Box(ORIGIN, subdim), Transform(translation=center), mixture)
         element.nodes[name / subname] = newnode
-    element.inclusive[name] = [(path, node) for path, node in element.nodes.items()
-                               if path != name]
+    element.inclusive[name] = [(path, node) for path, node in element.nodes.items() if path != name]
     return element
 
 
-def BoxTree(dimensions: tuple[cm, cm, cm],
-            mixture: Mixture,
-            name: PurePath,
-            transform: Transform = identity) -> Tree:
+def BoxTree(dimensions: tuple[cm, cm, cm], mixture: Mixture, name: PurePath, transform: Transform = identity) -> Tree:
     """Create a bare box shaped Tree object.
 
     Parameters
@@ -329,13 +329,11 @@ def BoxTree(dimensions: tuple[cm, cm, cm],
 
     """
     element = Tree()
-    element.nodes[name] = Node(Box(ORIGIN, dimensions),
-                               transform=transform,
-                               mixture=mixture)
+    element.nodes[name] = Node(Box(ORIGIN, dimensions), transform=transform, mixture=mixture)
     return element
 
 
-PICTURE_PATH = PurePath('Picture')
+PICTURE_PATH = PurePath("Picture")
 
 
 def split_box_inside_tree(tree: Tree, box_path: PurePath, resolution: tuple[cm, cm, cm]):
@@ -365,8 +363,9 @@ def split_box_inside_tree(tree: Tree, box_path: PurePath, resolution: tuple[cm, 
         parent_type = ChildType.external_exclusive
     if box_path not in tree.exclusive | tree.inclusive | tree.external_exclusive:
         tree.cut(box_path)
-        split_box = SplitBox(box.dimensions, node.mixture, PurePath(box_path.name), resolution,
-                             node.transform @ box.transform_)
+        split_box = SplitBox(
+            box.dimensions, node.mixture, PurePath(box_path.name), resolution, node.transform @ box.transform_
+        )
         if box_path.parent == PurePath():
             tree.inclusive = split_box.inclusive
             tree.exclusive = split_box.exclusive
@@ -377,18 +376,22 @@ def split_box_inside_tree(tree: Tree, box_path: PurePath, resolution: tuple[cm, 
             tree.graft(split_box, box_path.parent, parent_type)
             return
     if box_path in tree.inclusive or box_path in tree.external_exclusive:
-        raise ValueError(f" The node at {box_path} "
-                         f"must have only exclusive children")
+        raise ValueError(f" The node at {box_path} must have only exclusive children")
     exclusive_nodes = tree.exclusive[box_path] if box_path in tree.exclusive else []
     exclusive_geometries = [n.geometry.transform(n.transform) for p, n in exclusive_nodes]
     holes_bbox = union_bounding_box(exclusive_geometries)
     translation = holes_bbox.center - box.center
-    frame_box = FrameBox(frame_dimensions=box.dimensions,
-                         picture_dimensions=holes_bbox.dimensions,
-                         frame_name=PurePath(box_path.name), picture_name=PICTURE_PATH,
-                         frame_resolution=resolution,
-                         frame_mixture=node.mixture, picture_mixture=node.mixture,
-                         picture_translation=translation, transform=node.transform @ box.transform_)
+    frame_box = FrameBox(
+        frame_dimensions=box.dimensions,
+        picture_dimensions=holes_bbox.dimensions,
+        frame_name=PurePath(box_path.name),
+        picture_name=PICTURE_PATH,
+        frame_resolution=resolution,
+        frame_mixture=node.mixture,
+        picture_mixture=node.mixture,
+        picture_translation=translation,
+        transform=node.transform @ box.transform_,
+    )
     subtrees = {p: tree.subtree(p) for p, n in exclusive_nodes}
     tree.cut(box_path)
     if box_path.parent == PurePath():
@@ -401,5 +404,4 @@ def split_box_inside_tree(tree: Tree, box_path: PurePath, resolution: tuple[cm, 
     for path, sub_tree in subtrees.items():
         for p, root in sub_tree.roots():
             root.transform = identity
-        tree.graft(sub_tree, box_path / PICTURE_PATH,
-                   ChildType.exclusive)
+        tree.graft(sub_tree, box_path / PICTURE_PATH, ChildType.exclusive)
