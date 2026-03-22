@@ -34,6 +34,7 @@ autodoc_member_order = "groupwise"
 autodoc_inherit_docstrings = False
 mathjax_path = "mathjax/es5/tex-chtml-full.js"
 extensions = [
+    "nbsphinx",
     "sphinx_rtd_theme",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",

@@ -1,6 +1,7 @@
 dependencies:
   - mathjax
   - numpydoc
+  - nbsphinx
   - sphinx
   - sphinx_rtd_theme
   - hypothesis
