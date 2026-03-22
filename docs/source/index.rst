@@ -37,9 +37,10 @@ which is hopefully online as well now.
 
 .. toctree::
    :hidden:
-   :maxdepth: 3
+   :maxdepth: 5
 
    howtoguide
+   examples
    protocols
    reference
    tests
