@@ -55,7 +55,7 @@ U_mixture = Mixture.by_weight_density({isotopes.U: 19.1}, room_temperature)
 U_block_node = Node(geometry=Box((0.0,) * 3, dimensions=U_block_dimensions), mixture=U_mixture)
 U_block_path = aluminum_block_path / PurePath("uranium_block")
 # Constructing the tree that represents the fuel rod
-fuel_rod_tree = Tree()
+fuel_rod_tree = Tree(name="fuel_rod")
 fuel_rod_tree.nodes.update(
     {coolant_path: heavy_water_coolant_node, aluminum_block_path: aluminum_block_node, U_block_path: U_block_node}
 )
@@ -99,7 +99,7 @@ hafnium_block_nodes = {
 }
 
 # Setting up the core.
-core_tree = Tree()
+core_tree = Tree(name="core")
 # Adding the nodes
 heavy_water_pool_dimensions = tuple(np.array([*lattice_limits, grid_height]) * 2)
 heavy_water_pool_geometry = Box((0.0,) * 3, heavy_water_pool_dimensions)
