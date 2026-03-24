@@ -205,7 +205,8 @@ class Tree(Serializable):
 
     ser_identifier = "Tree"
 
-    def __init__(self):
+    def __init__(self, name: str | None = None):
+        self.name: str | None = name
         self.nodes: dict[PurePath, NodeLike] = {}
         self.inclusive: dict[PurePath, Progeny] = {}
         self.exclusive: dict[PurePath, Progeny] = {}
@@ -215,6 +216,7 @@ class Tree(Serializable):
         return (
             self.ser_identifier,
             dict(
+                name=self.name,
                 nodes={str(p): n.serialize() for p, n in self.nodes.items()},
                 inclusive=_ser(self.inclusive),
                 exclusive=_ser(self.exclusive),
@@ -224,7 +226,7 @@ class Tree(Serializable):
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
-        tree = cls()
+        tree = cls(name=d.get("name"))
         node_dict = {PurePath(p): deserialize_default(t, supported=supported) for p, t in d["nodes"].items()}
         d = dict(
             nodes=node_dict,
@@ -250,7 +252,7 @@ class Tree(Serializable):
         try:
             return all(
                 getattr(self, attr) == getattr(other, attr)
-                for attr in ["nodes", "inclusive", "exclusive", "external_exclusive"]
+                for attr in ["name", "nodes", "inclusive", "exclusive", "external_exclusive"]
             )
         except AttributeError:
             pass
