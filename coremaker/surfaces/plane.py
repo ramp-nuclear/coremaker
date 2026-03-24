@@ -2,7 +2,7 @@
 
 import math
 from functools import lru_cache
-from typing import Any, Sequence, Type, TypeVar
+from typing import Any, Sequence, Type, TypeVar, Literal
 
 from scipy.optimize import linprog
 from scipy.spatial import ConvexHull, HalfspaceIntersection
@@ -91,6 +91,23 @@ class Plane(Serializable):
         if isinstance(other, type(self)):
             return self.a == other.a and self.b == other.b
         return NotImplemented
+
+    def check_point(self, point: tuple[float, float, float]) -> Literal[-1, 0, 1]:
+        """Checks if a point is positive to the surface or negative.
+
+        Parameters
+        ----------
+        point: tuple[float, float, float]
+            Float to check against the plane
+
+        """
+        v = np.dot(self.a, point) + self.b
+        if v > 0:
+            return 1
+        return 0 if v == 0 else -1
+
+    def distance(self, point: tuple[float, float, float]) -> float:
+        return abs(np.dot(self.a, point) + self.b / norm(self.a, ord=2))
 
     def normal(self, point: tuple[cm, cm, cm]) -> tuple[float, float, float]:
         n = norm(self.a, ord=2)
