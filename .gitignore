@@ -7,3 +7,4 @@ venv
 /docs/source/_static/
 .hypothesis
 .pytest_cache
+.ipynb_checkpoints
