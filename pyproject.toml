@@ -31,8 +31,10 @@ dependencies = [
     "numpy",
     "cytoolz",
     "pyparsing",
+    "matplotlib",
     "more-itertools",
     "multipledispatch",
+    "networkx",
     "ramp-core",
     "ramp-isotopes",
 ]
