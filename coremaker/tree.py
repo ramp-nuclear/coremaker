@@ -60,8 +60,11 @@ creation in any of the factories under :ref:`Elements`.
 
 from enum import Enum, auto
 from itertools import chain, product
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import Any, Iterable, Sequence, Type, TypeVar
+
+import matplotlib.pyplot as plt
+import networkx as nx
 
 try:
     from typing import Self
@@ -572,3 +575,92 @@ class Tree(Serializable):
                 },
             )
         return new
+
+    def plot(
+        self,
+        *,
+        path: Path | None = None,
+        size: tuple[float, float] = None,
+        node_size=700,
+        font_size=12,
+        node_color="black",
+        font_weight="bold",
+        edge_width: float = 2,
+        label_offset: float = 12e-3,
+    ) -> None:
+        """Plot this tree as a networkx graph.
+
+        Parameters
+        ----------
+        path: Path or None
+            Path to save the figure at, or None for a plt.show() call.
+        size: tuple[float, float]
+            Figure size used in plt.figure
+        node_size:
+            Node size in networkx.draw_networkx_nodes
+        font_size:
+            Font size for the labels as in networkx.draw_networkx_labels
+        node_color:
+            Color to use for the nodes as in networkx.draw_networkx_nodes
+        font_weight:
+            Font stylingnetworkx.draw_networkx_edges
+        edge_width: float
+            How wide should the edges be as in networkx.draw_networkx_edges
+        label_offset: float
+            How much to offset the node labels in the y-axis
+
+        """
+        g = nx.Graph()
+        g.add_edges_from([(p, r, dict(type="exclusive")) for p, lst in self.exclusive.items() for (r, _) in lst])
+        g.add_edges_from([(p, r, dict(type="inclusive")) for p, lst in self.inclusive.items() for (r, _) in lst])
+        g.add_edges_from(
+            [(p, r, dict(type="ex-exclusive")) for p, lst in self.external_exclusive.items() for (r, _) in lst]
+        )
+
+        inclusives = {(u, v): d["type"] for u, v, d in g.edges(data=True) if d["type"] == "inclusive"}
+        exclusives = {(u, v): d["type"] for u, v, d in g.edges(data=True) if d["type"] == "exclusive"}
+        ex_exclusives = {(u, v): d["type"] for u, v, d in g.edges(data=True) if d["type"] == "ex_exclusive"}
+
+        root = list(self.roots())[0][0]
+        pos = nx.drawing.layout.bfs_layout(g, start=root)
+
+        plt.figure(**(dict(figsize=size) if size is not None else {}))
+
+        # Draw nodes and labels
+        nx.draw_networkx_nodes(g, pos, node_size=node_size, node_color=node_color)
+        nx.draw_networkx_labels(
+            g,
+            {n: (x, y + label_offset) for n, (x, y) in pos.items()},
+            labels={n: n.name for n in g.nodes},
+            font_size=font_size,
+            font_weight=font_weight,
+        )
+
+        # Draw edges for each type
+        nx.draw_networkx_edges(
+            g, pos, edgelist=list(inclusives.keys()), edge_color="tab:blue", width=edge_width, arrows=True
+        )
+        nx.draw_networkx_edges(
+            g, pos, edgelist=list(exclusives.keys()), edge_color="tab:red", width=edge_width, arrows=True
+        )
+        nx.draw_networkx_edges(
+            g,
+            pos,
+            edgelist=list(ex_exclusives.keys()),
+            edge_color="tab:red",
+            style="dashed",
+            width=edge_width,
+            arrows=True,
+        )
+        nx.draw_networkx_edge_labels(
+            g,
+            pos,
+            edge_labels=inclusives | exclusives | ex_exclusives,
+            font_size=font_size,
+        )
+
+        plt.axis("off")  # Hide axes
+        if path is None:
+            plt.show()
+        else:
+            plt.savefig(str(path))
