@@ -134,14 +134,14 @@ class Plane(Serializable):
         if not any(self.a):
             return "Plane<Undefined plane with a=0!>"
         if a1 != 0 and self.isclose(Plane(a1, 0.0, 0.0, self.b)):
-            sign = "-" if a1 < 0 else ""
-            return f"Plane<{sign}x >= {abs(self.b / a1):.3e}>"
+            sign = "<" if a1 < 0 else ">"
+            return f"Plane<x {sign}= {self.b / a1:.3e}>"
         elif a2 != 0 and self.isclose(Plane(0.0, a2, 0.0, self.b)):
-            sign = "-" if a2 < 0 else ""
-            return f"Plane<{sign}y >= {abs(self.b / a2):.3e}>"
+            sign = "<" if a2 < 0 else ">"
+            return f"Plane<y {sign}= {self.b / a2:.3e}>"
         elif a3 != 0 and self.isclose(Plane(0.0, 0.0, a3, self.b)):
-            sign = "-" if a3 < 0 else ""
-            return f"Plane<{sign}z >= {abs(self.b / a3):.3e}>"
+            sign = "<" if a3 < 0 else ">"
+            return f"Plane<z {sign}= {self.b / a3:.3e}>"
         elif self.isclose(Plane(0.0, a2, a3, self.b)):
             return f"Plane<{a2:.3e}y + {a3:.3e}z >= {self.b:.3e}>"
         elif self.isclose(Plane(a1, 0.0, a3, self.b)):
