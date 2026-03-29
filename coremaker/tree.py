@@ -207,6 +207,9 @@ class Tree(Serializable):
         Optional key describing the type of this tree (e.g. "fuel_rod", "core").
         Factored into equality comparisons: trees with different type keys
         are considered unequal even if their structure is identical.
+        For example, two fuel rods with identical neutronic geometry but
+        different thermo-hydraulic properties should
+        use distinct type keys so they are not treated as equal.
 
     """
 
