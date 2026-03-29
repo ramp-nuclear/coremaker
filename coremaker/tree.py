@@ -201,12 +201,19 @@ class Tree(Serializable):
     not move the stone by necessity. In practice, external exclusive children are
     partially inserted elements.
 
+    Attributes
+    ----------
+    type_key : str or None
+        Optional key describing the type of this tree (e.g. "fuel_rod", "core").
+        Factored into equality comparisons: trees with different type keys
+        are considered unequal even if their structure is identical.
+
     """
 
     ser_identifier = "Tree"
 
-    def __init__(self, name: str | None = None):
-        self.name: str | None = name
+    def __init__(self, type_key: str | None = None):
+        self.type_key: str | None = type_key
         self.nodes: dict[PurePath, NodeLike] = {}
         self.inclusive: dict[PurePath, Progeny] = {}
         self.exclusive: dict[PurePath, Progeny] = {}
@@ -216,7 +223,7 @@ class Tree(Serializable):
         return (
             self.ser_identifier,
             dict(
-                name=self.name,
+                type_key=self.type_key,
                 nodes={str(p): n.serialize() for p, n in self.nodes.items()},
                 inclusive=_ser(self.inclusive),
                 exclusive=_ser(self.exclusive),
@@ -226,7 +233,7 @@ class Tree(Serializable):
 
     @classmethod
     def deserialize(cls: Type[Self], d: dict[str, Any], *, supported: dict[str, Type[Serializable]]) -> Self:
-        tree = cls(name=d.get("name"))
+        tree = cls(type_key=d.get("type_key"))
         node_dict = {PurePath(p): deserialize_default(t, supported=supported) for p, t in d["nodes"].items()}
         d = dict(
             nodes=node_dict,
@@ -252,7 +259,7 @@ class Tree(Serializable):
         try:
             return all(
                 getattr(self, attr) == getattr(other, attr)
-                for attr in ["name", "nodes", "inclusive", "exclusive", "external_exclusive"]
+                for attr in ["type_key", "nodes", "inclusive", "exclusive", "external_exclusive"]
             )
         except AttributeError:
             pass

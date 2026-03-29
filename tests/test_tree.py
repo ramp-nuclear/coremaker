@@ -6,7 +6,7 @@ from pathlib import PurePath
 import hypothesis.strategies as st
 import numpy as np
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis.extra.numpy import arrays
 
 from coremaker.elements.box import BoxTree, ExcludeFrame
@@ -18,44 +18,23 @@ from coremaker.transform import Transform, identity, rotate180
 from coremaker.tree import ChildType, Tree, _switch
 
 
-def test_tree_default_name_is_none():
-    assert Tree().name is None
+def test_tree_default_type_key_is_none():
+    assert Tree().type_key is None
 
 
-def test_tree_name_attribute():
-    t = Tree(name="Fuel-1")
-    assert t.name == "Fuel-1"
-
-
-def test_tree_serialize_includes_name():
-    t = Tree(name="MyRod")
-    _, d = t.serialize()
-    assert d["name"] == "MyRod"
-
-
-def test_tree_serialize_none_name():
-    t = Tree()
-    _, d = t.serialize()
-    assert d["name"] is None
-
-
-def test_tree_deserialize_without_name_key():
-    """Old serialized data without a 'name' key should deserialize with name=None."""
-    d = {"nodes": {}, "inclusive": {}, "exclusive": {}, "external_exclusive": {}}
-    t = Tree.deserialize(d, supported={})
-    assert t.name is None
-
-
-def test_tree_equality_considers_name():
-    t1 = Tree(name="A")
-    t2 = Tree(name="B")
-    t3 = Tree(name="A")
+@given(key_a=st.text(min_size=1), key_b=st.text(min_size=1))
+def test_tree_equality_considers_type_key(key_a, key_b):
+    assume(key_a != key_b)
+    t1 = Tree(type_key=key_a)
+    t2 = Tree(type_key=key_b)
+    t3 = Tree(type_key=key_a)
     assert t1 != t2
     assert t1 == t3
 
 
-def test_tree_equality_named_vs_unnamed():
-    t1 = Tree(name="A")
+@given(key=st.text(min_size=1))
+def test_tree_equality_typed_vs_untyped(key):
+    t1 = Tree(type_key=key)
     t2 = Tree()
     assert t1 != t2
 
