@@ -6,7 +6,7 @@ from pathlib import PurePath
 import hypothesis.strategies as st
 import numpy as np
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis.extra.numpy import arrays
 
 from coremaker.elements.box import BoxTree, ExcludeFrame
@@ -16,6 +16,27 @@ from coremaker.materials.steel import steel_304L
 from coremaker.plane_intersection import intersect_tree
 from coremaker.transform import Transform, identity, rotate180
 from coremaker.tree import ChildType, Tree, _switch
+
+
+def test_tree_default_type_key_is_none():
+    assert Tree().type_key is None
+
+
+@given(key_a=st.text(min_size=1), key_b=st.text(min_size=1))
+def test_tree_equality_considers_type_key(key_a, key_b):
+    assume(key_a != key_b)
+    t1 = Tree(type_key=key_a)
+    t2 = Tree(type_key=key_b)
+    t3 = Tree(type_key=key_a)
+    assert t1 != t2
+    assert t1 == t3
+
+
+@given(key=st.text(min_size=1))
+def test_tree_equality_typed_vs_untyped(key):
+    t1 = Tree(type_key=key)
+    t2 = Tree()
+    assert t1 != t2
 
 
 @pytest.mark.parametrize(
