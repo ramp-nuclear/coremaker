@@ -23,17 +23,17 @@ class CellGeometry:
         Absolute y position in cm.
     cell_shape : CellShape
         Shape of this cell.
-    half_width_x : float
-        For SQUARE: half-width in x (dx/2).
-        For HEXAGON: flat-to-flat half-pitch (pitch/2).
-    half_width_y : float or None
-        For SQUARE: half-width in y (dy/2).
-        For HEXAGON: None (uniform pitch).
+    width_x : float
+        Full edge-to-edge extent in x.
+        For SQUARE: cell width (dx).  For HEXAGON: flat-to-flat pitch.
+    width_y : float or None
+        Full edge-to-edge extent in y.
+        For SQUARE: cell height (dy).  For HEXAGON: None (uniform pitch).
 
     """
 
     center_x: float
     center_y: float
     cell_shape: CellShape
-    half_width_x: float
-    half_width_y: float | None = None
+    width_x: float
+    width_y: float | None = None

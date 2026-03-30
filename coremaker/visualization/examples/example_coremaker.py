@@ -6,8 +6,8 @@ and demonstrates the full visualization workflow:
 
 1. Power heatmap with peak annotation
 2. Burnup / depletion heatmap
-3. Categorical component-type map
-4. Shuffling scheme with movement arrows and discharge markers
+3. Rod map coloured by type_key
+4. Transition map from a coreoperator Scheme
 
 Run with::
 
@@ -15,16 +15,28 @@ Run with::
 
 """
 
-import numpy as np
-from coremaker.example import example_core
+from copy import deepcopy
 
+import numpy as np
+from coremaker.example import example_core, fuel_rod_tree
 from coremaker.visualization import (
-    plot_burnup_map,
-    plot_component_type_map,
     plot_heatmap,
-    plot_shuffle_map,
+    plot_rod_map,
+    plot_scheme,
 )
-from coremaker.visualization._core_geometry import all_site_geometries, occupied_sites
+from coremaker.visualization.coregeometry import all_site_geometries, occupied_sites
+
+
+def fresh_fuel_rod():
+    """Factory that produces a fresh fuel rod."""
+    return deepcopy(fuel_rod_tree)
+
+
+def control_rod():
+    """Factory that produces a control rod (stub for demonstration)."""
+    rod = deepcopy(fuel_rod_tree)
+    rod.type_key = "control_rod"
+    return rod
 
 
 def main():
@@ -65,56 +77,38 @@ def main():
         for site in occupied
     }
 
-    fig2, ax2 = plot_burnup_map(core, dep_map=dep, title="Synthetic Burnup -- coreMaker Core")
+    fig2, ax2 = plot_heatmap(
+        core,
+        site_values=dep,
+        cmap="YlGnBu",
+        units="Fraction Depleted",
+        title="Synthetic Burnup -- coreMaker Core",
+    )
     fig2.savefig("coremaker_burnup_map.png", dpi=150, bbox_inches="tight")
     print("Saved: coremaker_burnup_map.png")
 
-    # --- 3. Component type map ---
-    def type_by_position(site, _element):
-        geom = geometries[site]
-        r = np.sqrt(geom.center_x**2 + geom.center_y**2)
-        if r > 35:
-            return "Reflector"
-        elif r > 20:
-            return "Twice-Burned"
-        elif r > 10:
-            return "Once-Burned"
-        return "Fresh UO2"
+    # --- 3. Rod map (coloured by type_key) ---
+    fig3, ax3 = plot_rod_map(core, title="Rod Types -- coreMaker Core")
+    fig3.savefig("coremaker_rod_map.png", dpi=150, bbox_inches="tight")
+    print("Saved: coremaker_rod_map.png")
 
-    fig3, ax3 = plot_component_type_map(
+    # --- 4. Transition map from a Scheme ---
+    from coreoperator.mobilization import CyclicShuffle, LoadChain, LoadSite, Remove, Scheme
+
+    scheme = Scheme(actions=(
+        CyclicShuffle(["E5", "C3", "G7"]),
+        LoadChain(fresh_fuel_rod, ["D4", "F6", "H8"]),
+        LoadSite(control_rod, "B2"),
+        Remove(["A1", "I9"]),
+    ))
+
+    fig4, ax4 = plot_scheme(
         core,
-        type_fn=type_by_position,
-        color_dict={
-            "Fresh UO2": "#e41a1c",
-            "Once-Burned": "#ff7f00",
-            "Twice-Burned": "#4daf4a",
-            "Reflector": "#999999",
-        },
-        title="Assembly Types -- coreMaker Core",
-    )
-    fig3.savefig("coremaker_type_map.png", dpi=150, bbox_inches="tight")
-    print("Saved: coremaker_type_map.png")
-
-    # --- 4. Shuffle map with discharges ---
-    movements = [
-        ("E5", "C3"),
-        ("G7", "E5"),
-        ("D4", "F6"),
-        ("H8", "G7"),
-    ]
-    discharges = ["A1", "I9", "A9"]
-
-    fig4, ax4 = plot_shuffle_map(
-        core,
-        movements=movements,
-        discharges=discharges,
-        arrow_color="navy",
-        arrow_width=2.0,
-        discharge_color="red",
+        scheme,
         title="Shuffling Scheme -- coreMaker Core",
     )
-    fig4.savefig("coremaker_shuffle_map.png", dpi=150, bbox_inches="tight")
-    print("Saved: coremaker_shuffle_map.png")
+    fig4.savefig("coremaker_transition_map.png", dpi=150, bbox_inches="tight")
+    print("Saved: coremaker_transition_map.png")
 
 
 if __name__ == "__main__":

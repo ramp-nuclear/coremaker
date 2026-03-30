@@ -1,13 +1,21 @@
-"""Built-in physics map functions for common reactor analysis scenarios."""
+"""Built-in map functions for common reactor analysis scenarios."""
 
-from coremaker.visualization.maps.burnup import plot_burnup_map
-from coremaker.visualization.maps.component_type import plot_component_type_map
-from coremaker.visualization.maps.power import plot_power_map
-from coremaker.visualization.maps.shuffle import plot_shuffle_map
+from coremaker.visualization.maps.categorical import plot_categorical, plot_rod_map
+from coremaker.visualization.maps.heatmap import plot_heatmap, plot_power_map
+from coremaker.visualization.maps.transition import (
+    TransitionPlan,
+    plan_from_scheme,
+    plot_scheme,
+    plot_transition,
+)
 
 __all__ = [
+    "plot_heatmap",
     "plot_power_map",
-    "plot_burnup_map",
-    "plot_component_type_map",
-    "plot_shuffle_map",
+    "plot_categorical",
+    "plot_rod_map",
+    "plot_transition",
+    "plot_scheme",
+    "TransitionPlan",
+    "plan_from_scheme",
 ]

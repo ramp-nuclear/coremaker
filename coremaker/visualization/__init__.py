@@ -12,29 +12,29 @@ Install the visualization extra to use this module::
 
 __all__ = [
     "plot_heatmap",
-    "plot_categorical",
-    "plot_arrows",
     "plot_power_map",
-    "plot_burnup_map",
-    "plot_component_type_map",
-    "plot_shuffle_map",
+    "plot_categorical",
+    "plot_rod_map",
+    "plot_transition",
+    "plot_scheme",
+    "TransitionPlan",
+    "plan_from_scheme",
 ]
 
 
 def __getattr__(name):
     """Lazy-load plotting functions to avoid importing matplotlib at package import time."""
-    _engine_funcs = {"plot_heatmap", "plot_categorical", "plot_arrows"}
     _map_funcs = {
-        "plot_power_map": "coremaker.visualization.maps.power",
-        "plot_burnup_map": "coremaker.visualization.maps.burnup",
-        "plot_component_type_map": "coremaker.visualization.maps.component_type",
-        "plot_shuffle_map": "coremaker.visualization.maps.shuffle",
+        "plot_heatmap": "coremaker.visualization.maps.heatmap",
+        "plot_power_map": "coremaker.visualization.maps.heatmap",
+        "plot_categorical": "coremaker.visualization.maps.categorical",
+        "plot_rod_map": "coremaker.visualization.maps.categorical",
+        "plot_transition": "coremaker.visualization.maps.transition",
+        "plot_scheme": "coremaker.visualization.maps.transition",
+        "TransitionPlan": "coremaker.visualization.maps.transition",
+        "plan_from_scheme": "coremaker.visualization.maps.transition",
     }
 
-    if name in _engine_funcs:
-        from coremaker.visualization import _engine
-
-        return getattr(_engine, name)
     if name in _map_funcs:
         import importlib
 

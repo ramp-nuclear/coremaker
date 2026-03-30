@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from coremaker.visualization._types import CellGeometry, CellShape
+from coremaker.visualization.types import CellGeometry, CellShape
 
 try:
     from matplotlib.patches import Polygon, Rectangle
@@ -28,17 +28,18 @@ def make_patch(geom: CellGeometry, **kwargs) -> Rectangle | Polygon:
 
     """
     if geom.cell_shape == CellShape.SQUARE:
-        hw_y = geom.half_width_y if geom.half_width_y is not None else geom.half_width_x
+        w = geom.width_x
+        h = geom.width_y if geom.width_y is not None else geom.width_x
         return Rectangle(
-            (geom.center_x - geom.half_width_x, geom.center_y - hw_y),
-            width=2 * geom.half_width_x,
-            height=2 * hw_y,
+            (geom.center_x - w / 2, geom.center_y - h / 2),
+            width=w,
+            height=h,
             **kwargs,
         )
     elif geom.cell_shape == CellShape.HEXAGON:
-        # Flat-topped hexagon: apothem = half_width_x = pitch/2
+        # Flat-topped hexagon: apothem = pitch/2
         # Circumradius from apothem: r = apothem / (sqrt(3)/2)
-        apothem = geom.half_width_x
+        apothem = geom.width_x / 2
         r = apothem / (np.sqrt(3) / 2)
         # Flat-topped orientation: first vertex at 0 degrees, rotated by 30 deg
         angles = np.linspace(0, 2 * np.pi, 7)[:-1] + np.pi / 6

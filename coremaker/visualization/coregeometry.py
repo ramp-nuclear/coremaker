@@ -3,7 +3,7 @@
 from coremaker.grids.cartgrid import CartesianGrid
 from coremaker.grids.cartspaced import GeneralSpacedGrid, SpacedGrid
 
-from coremaker.visualization._types import CellGeometry, CellShape
+from coremaker.visualization.types import CellGeometry, CellShape
 
 
 def cell_shape_for_grid(grid) -> CellShape:
@@ -14,7 +14,7 @@ def cell_shape_for_grid(grid) -> CellShape:
 
 
 def cell_dimensions_for_site(grid, site) -> tuple[float, float | None]:
-    """Return (half_width_x, half_width_y) for a site.
+    """Return (width_x, width_y) for a site.
 
     For CartesianGrid the dimensions are uniform across all sites.
     For SpacedGrid/GeneralSpacedGrid, each site may belong to a different
@@ -22,12 +22,12 @@ def cell_dimensions_for_site(grid, site) -> tuple[float, float | None]:
     """
     if isinstance(grid, CartesianGrid):
         dims = grid.lattice.dimensions
-        return float(dims[0]) / 2.0, float(dims[1]) / 2.0
+        return float(dims[0]), float(dims[1])
 
     if isinstance(grid, (SpacedGrid, GeneralSpacedGrid)):
         lattice, _ = grid.site_index(site)
         dims = lattice.dimensions
-        return float(dims[0]) / 2.0, float(dims[1]) / 2.0
+        return float(dims[0]), float(dims[1])
 
     raise TypeError(f"Unsupported grid type: {type(grid)}")
 
@@ -46,8 +46,8 @@ def site_geometry(core, site) -> CellGeometry:
         center_x=tx,
         center_y=ty,
         cell_shape=shape,
-        half_width_x=hw_x,
-        half_width_y=hw_y,
+        width_x=hw_x,
+        width_y=hw_y,
     )
 
 
