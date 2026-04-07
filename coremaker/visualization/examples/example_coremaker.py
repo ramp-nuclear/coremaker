@@ -25,6 +25,7 @@ from coremaker.visualization import (
     plot_scheme,
 )
 from coremaker.visualization.coregeometry import all_site_geometries, occupied_sites
+from coreoperator.mobilization import CyclicShuffle, LoadChain, LoadSite, Remove, Scheme
 
 
 def fresh_fuel_rod():
@@ -93,8 +94,6 @@ def main():
     print("Saved: coremaker_rod_map.png")
 
     # --- 4. Transition map from a Scheme ---
-    from coreoperator.mobilization import CyclicShuffle, LoadChain, LoadSite, Remove, Scheme
-
     scheme = Scheme(actions=(
         CyclicShuffle(["E5", "C3", "G7"]),
         LoadChain(fresh_fuel_rod, ["D4", "F6", "H8"]),

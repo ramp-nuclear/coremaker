@@ -108,7 +108,7 @@ def plot_categorical(
 
     ax.set_aspect("equal")
     ax.autoscale_view()
-    ax.set_title(title or "Component Types")
+    ax.set_title(title)
     ax.set_xlabel("x [cm]")
     ax.set_ylabel("y [cm]")
 

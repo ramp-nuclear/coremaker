@@ -86,6 +86,7 @@ def plot_transition(
     load_marker: str = "s",
     load_markersize: float = 14,
     load_color_dict: Optional[dict[str, str]] = None,
+    rod_color_dict: Optional[dict[str, str]] = None,
     discharge_color: str = "red",
     discharge_marker: str = "X",
     discharge_markersize: float = 16,
@@ -116,7 +117,10 @@ def plot_transition(
         Size of load markers.
     load_color_dict : dict[str, str], optional
         Mapping of rod type name to color for load markers.
-        Auto-assigned from ``tab10`` if not provided.
+        Auto-assigned from ``gist_rainbow`` if not provided.
+    rod_color_dict : dict[str, str], optional
+        Mapping of rod type name to color for the base rod map.
+        Auto-assigned from ``tab20`` if not provided.
     discharge_color : str
         Color for discharge markers.
     discharge_marker : str
@@ -126,21 +130,19 @@ def plot_transition(
     title : str
         Plot title.
     **rod_map_kwargs
-        Forwarded to ``plot_rod_map`` (e.g. *color_dict*, *site_names*).
+        Forwarded to ``plot_rod_map`` (e.g. *site_names*).
 
     Returns
     -------
     tuple[Figure, Axes]
 
     """
-    from matplotlib.lines import Line2D
-
     from coremaker.visualization.maps.categorical import plot_rod_map
 
     geometries = all_site_geometries(core)
 
     if ax is None:
-        fig, ax = plot_rod_map(core, title=title, **rod_map_kwargs)
+        fig, ax = plot_rod_map(core, title=title, color_dict=rod_color_dict, **rod_map_kwargs)
     else:
         fig = ax.get_figure()
 
@@ -149,7 +151,7 @@ def plot_transition(
         if src in geometries and dst in geometries:
             src_geom = geometries[src]
             dst_geom = geometries[dst]
-            rad = 0.15 + 0.05 * i
+            rad = 0.15
             arrow = FancyArrowPatch(
                 (src_geom.center_x, src_geom.center_y),
                 (dst_geom.center_x, dst_geom.center_y),
@@ -185,6 +187,10 @@ def plot_transition(
             )
 
     # Legend for loaded rod types (left side)
+    # Preserve the existing rod-map legend before adding the load legend
+    from matplotlib.lines import Line2D
+
+    existing_legend = ax.get_legend()
     if load_types:
         legend_handles = [
             Line2D(
@@ -195,11 +201,13 @@ def plot_transition(
                 markeredgewidth=2.5,
                 fillstyle="none",
                 linestyle="None",
-                label=f"Load: {name}",
+                label=name,
             )
             for name in load_types
         ]
         ax.legend(handles=legend_handles, loc="upper left", fontsize=8)
+    if existing_legend is not None:
+        ax.add_artist(existing_legend)
 
     # Draw discharge markers
     for site in plan.discharges:

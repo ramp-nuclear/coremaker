@@ -180,6 +180,9 @@ def plot_power_map(
     tuple[Figure, Axes]
 
     """
+    if energy_map is None and site_values is None:
+        raise ValueError("Either energy_map or site_values must be provided.")
+
     if energy_map is not None:
         from ramp.state_analysis.util import split_name
 
