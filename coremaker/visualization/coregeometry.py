@@ -1,5 +1,7 @@
 """Extract renderable geometry from a coreMaker Core object."""
 
+import numpy as np
+
 from coremaker.grids.cartgrid import CartesianGrid
 from coremaker.grids.cartspaced import GeneralSpacedGrid, SpacedGrid
 
@@ -70,3 +72,29 @@ def site_labels_from_core(core) -> dict[str, str]:
         if hasattr(element, "name") and element.name is not None:
             labels[site] = element.name
     return labels
+
+
+def site_rotations(core) -> dict[str, float]:
+    """Return the z-rotation angle in degrees for each occupied site.
+
+    The rotation is extracted from the root node transform of each rod element.
+
+    Parameters
+    ----------
+    core : coremaker.core.Core
+        A coreMaker Core object.
+
+    Returns
+    -------
+    dict[str, float]
+        Mapping of site label to rotation angle in degrees, normalised to [0, 360).
+
+    """
+    rotations: dict[str, float] = {}
+    grid = core.grid
+    for site in grid.keys():
+        element = grid[site]
+        _, root_node = next(element.roots())
+        angle = float(np.degrees(root_node.transform.rotation.as_euler("xyz")[2]))
+        rotations[site] = angle % 360
+    return rotations

@@ -7,7 +7,9 @@ and demonstrates the full visualization workflow:
 1. Power heatmap with peak annotation
 2. Burnup / depletion heatmap
 3. Rod map coloured by type_key
-4. Transition map from a coreoperator Scheme
+4. Rotation map showing rod orientations
+5. Rod map with rotation overlay
+6. Transition map from a coreoperator Scheme (with rotations)
 
 Run with::
 
@@ -19,13 +21,22 @@ from copy import deepcopy
 
 import numpy as np
 from coremaker.example import example_core, fuel_rod_tree
+from coremaker.transform import rotate90, rotate180, rotate270
 from coremaker.visualization import (
     plot_heatmap,
     plot_rod_map,
+    plot_rotation_map,
     plot_scheme,
 )
 from coremaker.visualization.coregeometry import all_site_geometries, occupied_sites
-from coreoperator.mobilization import CyclicShuffle, LoadChain, LoadSite, Remove, Scheme
+from coreoperator.mobilization import (
+    CyclicShuffle,
+    LoadChain,
+    LoadSite,
+    Remove,
+    Scheme,
+    TransformInPlace,
+)
 
 
 def fresh_fuel_rod():
@@ -93,20 +104,43 @@ def main():
     fig3.savefig("coremaker_rod_map.png", dpi=150, bbox_inches="tight")
     print("Saved: coremaker_rod_map.png")
 
-    # --- 4. Transition map from a Scheme ---
+    # --- 4. Rotation map (rod orientations) ---
+    # Apply some rotations to rods so the map has something to show
+    rotated_core = deepcopy(core)
+    rotated_core.grid["C3"].transform(None, rotate90)
+    rotated_core.grid["E5"].transform(None, rotate180)
+    rotated_core.grid["G7"].transform(None, rotate270)
+
+    fig4, ax4 = plot_rotation_map(
+        rotated_core, title="Rod Orientations -- coreMaker Core", show_angle_text=True
+    )
+    fig4.savefig("coremaker_rotation_map.png", dpi=150, bbox_inches="tight")
+    print("Saved: coremaker_rotation_map.png")
+
+    # --- 5. Rod map with rotation overlay ---
+    fig5, ax5 = plot_rod_map(
+        rotated_core,
+        title="Rod Types + Rotations -- coreMaker Core",
+        show_rotations=True,
+    )
+    fig5.savefig("coremaker_rod_map_rotations.png", dpi=150, bbox_inches="tight")
+    print("Saved: coremaker_rod_map_rotations.png")
+
+    # --- 6. Transition map from a Scheme (with rotations) ---
     scheme = Scheme(actions=(
-        CyclicShuffle(["E5", "C3", "G7"]),
+        CyclicShuffle([("E5", rotate90), ("C3", rotate180), ("G7", rotate270)]),
         LoadChain(fresh_fuel_rod, ["D4", "F6", "H8"]),
         LoadSite(control_rod, "B2"),
+        TransformInPlace([("B8", rotate90), ("H2", rotate180)]),
         Remove(["A1", "I9"]),
     ))
 
-    fig4, ax4 = plot_scheme(
+    fig6, ax6 = plot_scheme(
         core,
         scheme,
         title="Shuffling Scheme -- coreMaker Core",
     )
-    fig4.savefig("coremaker_transition_map.png", dpi=150, bbox_inches="tight")
+    fig6.savefig("coremaker_transition_map.png", dpi=150, bbox_inches="tight")
     print("Saved: coremaker_transition_map.png")
 
 

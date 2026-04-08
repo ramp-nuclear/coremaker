@@ -3,12 +3,14 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
+import numpy as np
+
 from coremaker.visualization.coregeometry import all_site_geometries
 
 try:
     import matplotlib.pyplot as plt
     from matplotlib.figure import Figure
-    from matplotlib.patches import FancyArrowPatch
+    from matplotlib.patches import Arc, FancyArrowPatch, Polygon
 except ImportError as e:
     raise ImportError(
         "matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]"
@@ -27,12 +29,26 @@ class TransitionPlan:
         Pairs of (site, rod_name) for freshly loaded rods.
     discharges : list[str]
         Site labels from which rods are removed.
+    rotations : dict[str, float]
+        Mapping of site label to relative rotation in degrees applied
+        during the transition. Positive = counter-clockwise.
 
     """
 
     movements: list[tuple[str, str]] = field(default_factory=list)
     loads: list[tuple[str, str | None]] = field(default_factory=list)
     discharges: list[str] = field(default_factory=list)
+    rotations: dict[str, float] = field(default_factory=dict)
+
+
+def _z_rotation_deg(transform) -> float:
+    """Extract the z-axis rotation angle in degrees from a Transform."""
+    from coremaker.transform import identity
+
+    if transform == identity:
+        return 0.0
+    angle = float(np.degrees(transform.rotation.as_euler("xyz")[2]))
+    return angle % 360
 
 
 def plan_from_scheme(scheme) -> TransitionPlan:
@@ -47,27 +63,47 @@ def plan_from_scheme(scheme) -> TransitionPlan:
     TransitionPlan
 
     """
-    from coreoperator.mobilization import CyclicShuffle, LoadChain, LoadSite, Remove
+    from coreoperator.mobilization import CyclicShuffle, LoadChain, LoadSite, Remove, TransformInPlace
 
     plan = TransitionPlan()
     for action in scheme.actions:
         if isinstance(action, CyclicShuffle):
             sites = [site for site, _transform in action.sites]
+            transforms = [t for _, t in action.sites]
             for i in range(len(sites)):
-                plan.movements.append((sites[i], sites[(i + 1) % len(sites)]))
+                src = sites[i]
+                dst = sites[(i + 1) % len(sites)]
+                plan.movements.append((src, dst))
+                rot = _z_rotation_deg(transforms[i])
+                if rot != 0:
+                    plan.rotations[dst] = rot
 
         elif isinstance(action, LoadSite):
-            site, _transform = action.sites[0]
+            site, transform = action.sites[0]
             rod = action.factory()
             plan.loads.append((site, getattr(rod, "type_key", None)))
+            rot = _z_rotation_deg(transform)
+            if rot:
+                plan.rotations[site] = rot
 
         elif isinstance(action, LoadChain):
             sites = [site for site, _transform in action.sites]
+            transforms = [t for _, t in action.sites]
             rod = action.factory()
             plan.loads.append((sites[0], getattr(rod, "type_key", None)))
             for i in range(len(sites) - 1):
                 plan.movements.append((sites[i], sites[i + 1]))
             plan.discharges.append(sites[-1])
+            for j, site in enumerate(sites):
+                rot = _z_rotation_deg(transforms[j])
+                if rot != 0:
+                    plan.rotations[site] = rot
+
+        elif isinstance(action, TransformInPlace):
+            for site, transform in action.sites:
+                rot = _z_rotation_deg(transform)
+                if rot != 0:
+                    plan.rotations[site] = rot
 
         elif isinstance(action, Remove):
             for site in action.sites:
@@ -90,6 +126,10 @@ def plot_transition(
     discharge_color: str = "red",
     discharge_marker: str = "X",
     discharge_markersize: float = 16,
+    show_rotations: bool = True,
+    rotation_arrow_color: str = "blue",
+    rotation_arrow_width: float = 2.0,
+    rotation_arrow_length_frac: float = 0.45,
     title: str = "Shuffling Scheme",
     **rod_map_kwargs,
 ) -> tuple[Figure, plt.Axes]:
@@ -127,6 +167,14 @@ def plot_transition(
         Marker style for discharged sites (default: 'X').
     discharge_markersize : float
         Size of discharge markers.
+    show_rotations : bool
+        Whether to draw rotation arrows on target sites.
+    rotation_arrow_color : str
+        Color for rotation arrows.
+    rotation_arrow_width : float
+        Line width of rotation arrows.
+    rotation_arrow_length_frac : float
+        Arrow length as a fraction of half the cell's smaller dimension.
     title : str
         Plot title.
     **rod_map_kwargs
@@ -222,6 +270,64 @@ def plot_transition(
                 markeredgewidth=2.5,
                 zorder=11,
             )
+
+    # Draw circular rotation arrows on target sites
+    if show_rotations and plan.rotations:
+        for site, angle_deg in plan.rotations.items():
+            if site not in geometries or angle_deg == 0:
+                continue
+            geom = geometries[site]
+            half_size = min(geom.width_x, geom.width_y or geom.width_x) / 2
+            radius = rotation_arrow_length_frac * half_size
+            cx, cy = geom.center_x, geom.center_y
+
+            # Arc angles (matplotlib Arc uses degrees, 0 = +x)
+            # Leave a small gap at the end for the arrowhead
+            gap = 8  # degrees reserved for arrowhead visibility
+            theta1 = 90.0  # start at 12 o'clock
+            theta2 = 90.0 + angle_deg - gap
+
+            arc = Arc(
+                (cx, cy), 2 * radius, 2 * radius,
+                angle=0, theta1=min(theta1, theta2), theta2=max(theta1, theta2),
+                color=rotation_arrow_color,
+                linewidth=rotation_arrow_width,
+                zorder=12,
+            )
+            ax.add_patch(arc)
+
+            # Arrowhead triangle at the tip of the arc
+            tip_angle = np.radians(90.0 + angle_deg)
+            tip_x = cx + radius * np.cos(tip_angle)
+            tip_y = cy + radius * np.sin(tip_angle)
+
+            # Tangent direction at the tip (perpendicular to radial, in sweep direction)
+            sign = 1 if angle_deg > 0 else -1
+            tangent_angle = tip_angle + sign * np.pi / 2
+
+            # Build a small triangle arrowhead
+            head_len = radius * 0.3
+            head_width = radius * 0.18
+            # Tip point, and two base points
+            dx = np.cos(tangent_angle)
+            dy = np.sin(tangent_angle)
+            # Normal to tangent (pointing outward from center)
+            nx = -dy * sign
+            ny = dx * sign
+            base_x = tip_x - head_len * dx
+            base_y = tip_y - head_len * dy
+            tri = Polygon(
+                [
+                    [tip_x, tip_y],
+                    [base_x + head_width * nx, base_y + head_width * ny],
+                    [base_x - head_width * nx, base_y - head_width * ny],
+                ],
+                closed=True,
+                facecolor=rotation_arrow_color,
+                edgecolor=rotation_arrow_color,
+                zorder=12,
+            )
+            ax.add_patch(tri)
 
     return fig, ax
 

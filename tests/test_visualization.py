@@ -16,6 +16,8 @@ from coremaker.visualization import (
     TransitionPlan,
     plot_categorical,
     plot_heatmap,
+    plot_rod_map,
+    plot_rotation_map,
     plot_transition,
 )
 from coremaker.visualization.coregeometry import (
@@ -24,6 +26,7 @@ from coremaker.visualization.coregeometry import (
     occupied_sites,
     site_geometry,
     site_labels_from_core,
+    site_rotations,
 )
 from coremaker.visualization.geometry import make_patch
 from coremaker.visualization.types import CellGeometry, CellShape
@@ -278,3 +281,104 @@ class TestPlotTransition:
             _fig_to_png_bytes(fig), diff_threshold=0.1, basename="transition_regression"
         )
         plt.close(fig)
+
+
+class TestSiteRotations:
+    def test_returns_dict_for_occupied_sites(self, core):
+        rotations = site_rotations(core)
+        occupied = occupied_sites(core)
+        assert set(rotations.keys()) == occupied
+
+    def test_values_are_normalised(self, core):
+        rotations = site_rotations(core)
+        for angle in rotations.values():
+            assert 0 <= angle < 360
+
+    def test_unrotated_rods_are_zero(self, core):
+        rotations = site_rotations(core)
+        for angle in rotations.values():
+            assert angle == pytest.approx(0.0, abs=1e-6)
+
+
+class TestPlotRotationMap:
+    def test_returns_figure_and_axes(self, core):
+        fig, ax = plot_rotation_map(core)
+        assert isinstance(fig, plt.Figure)
+        assert isinstance(ax, plt.Axes)
+        plt.close(fig)
+
+    def test_title_is_set(self, core):
+        fig, ax = plot_rotation_map(core, title="My Rotations")
+        assert ax.get_title() == "My Rotations"
+        plt.close(fig)
+
+    def test_accepts_existing_axes(self, core):
+        fig_ext, ax_ext = plt.subplots()
+        fig, ax = plot_rotation_map(core, ax=ax_ext)
+        assert ax is ax_ext
+        plt.close(fig)
+
+    def test_arrows_drawn_for_occupied_sites(self, core):
+        fig, ax = plot_rotation_map(core)
+        annotations = [c for c in ax.get_children() if isinstance(c, matplotlib.text.Annotation)]
+        occupied = occupied_sites(core)
+        arrow_annotations = [a for a in annotations if a.get_text() == ""]
+        assert len(arrow_annotations) == len(occupied)
+        plt.close(fig)
+
+
+class TestPlotRodMapRotations:
+    def test_rod_map_without_rotations(self, core):
+        fig, ax = plot_rod_map(core, show_rotations=False)
+        annotations = [c for c in ax.get_children() if isinstance(c, matplotlib.text.Annotation)]
+        arrow_annotations = [a for a in annotations if a.get_text() == ""]
+        assert len(arrow_annotations) == 0
+        plt.close(fig)
+
+    def test_rod_map_with_rotations(self, core):
+        fig, ax = plot_rod_map(core, show_rotations=True)
+        annotations = [c for c in ax.get_children() if isinstance(c, matplotlib.text.Annotation)]
+        occupied = occupied_sites(core)
+        arrow_annotations = [a for a in annotations if a.get_text() == ""]
+        assert len(arrow_annotations) == len(occupied)
+        plt.close(fig)
+
+
+class TestTransitionPlanRotations:
+    def test_empty_plan_has_empty_rotations(self):
+        plan = TransitionPlan()
+        assert plan.rotations == {}
+
+    def test_plan_with_rotations(self):
+        plan = TransitionPlan(
+            movements=[("A1", "B2")],
+            rotations={"B2": 90.0},
+        )
+        assert plan.rotations["B2"] == 90.0
+
+    def test_transition_draws_rotation_arrows(self, core):
+        from matplotlib.patches import Arc
+
+        plan = TransitionPlan(
+            movements=[("A1", "B2")],
+            rotations={"B2": 90.0},
+        )
+        fig, ax = plot_transition(core, plan, show_rotations=True)
+        arcs = [c for c in ax.get_children() if isinstance(c, Arc)]
+        assert len(arcs) >= 1
+        plt.close(fig)
+
+    def test_transition_no_arrows_when_disabled(self, core):
+        from matplotlib.patches import Arc
+
+        plan = TransitionPlan(
+            movements=[("A1", "B2")],
+            rotations={"B2": 90.0},
+        )
+        fig, ax_no_rot = plot_transition(core, plan, show_rotations=False)
+        fig2, ax_rot = plot_transition(core, plan, show_rotations=True)
+        no_rot_arcs = [c for c in ax_no_rot.get_children() if isinstance(c, Arc)]
+        rot_arcs = [c for c in ax_rot.get_children() if isinstance(c, Arc)]
+        assert len(rot_arcs) > len(no_rot_arcs)
+        plt.close(fig)
+        plt.close(fig2)

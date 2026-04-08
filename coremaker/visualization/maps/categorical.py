@@ -125,6 +125,10 @@ def plot_rod_map(
     show_labels: bool = True,
     label_fontsize: int = 7,
     empty_color: str = "#dddddd",
+    show_rotations: bool = False,
+    arrow_color: str = "black",
+    arrow_width: float = 1.5,
+    arrow_length_frac: float = 0.35,
 ) -> tuple[Figure, plt.Axes]:
     """Plot a categorical rod map coloured by rod type.
 
@@ -152,6 +156,14 @@ def plot_rod_map(
         Font size for site labels.
     empty_color : str
         Color for unoccupied or unnamed sites.
+    show_rotations : bool
+        Whether to overlay rotation arrows on each cell.
+    arrow_color : str
+        Color of rotation arrows.
+    arrow_width : float
+        Line width of rotation arrows.
+    arrow_length_frac : float
+        Arrow length as a fraction of half the cell's smaller dimension.
 
     Returns
     -------
@@ -173,7 +185,7 @@ def plot_rod_map(
             if type_key is not None:
                 site_categories[site] = type_key
 
-    return plot_categorical(
+    fig, ax = plot_categorical(
         core,
         site_categories,
         ax=ax,
@@ -183,3 +195,20 @@ def plot_rod_map(
         label_fontsize=label_fontsize,
         empty_color=empty_color,
     )
+
+    if show_rotations:
+        from coremaker.visualization.coregeometry import site_rotations
+        from coremaker.visualization.maps.rotation import _draw_rotation_arrows
+
+        geometries = all_site_geometries(core)
+        rotations = site_rotations(core)
+        _draw_rotation_arrows(
+            ax,
+            geometries,
+            rotations,
+            arrow_color=arrow_color,
+            arrow_width=arrow_width,
+            arrow_length_frac=arrow_length_frac,
+        )
+
+    return fig, ax
