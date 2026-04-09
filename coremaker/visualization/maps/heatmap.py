@@ -18,9 +18,8 @@ try:
     from matplotlib.colors import Normalize
     from matplotlib.figure import Figure
 except ImportError as e:
-    raise ImportError(
-        "matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]"
-    ) from e
+    e.add_note("matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]")
+    raise
 
 
 def plot_heatmap(

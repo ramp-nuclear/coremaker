@@ -12,9 +12,8 @@ try:
     from matplotlib.figure import Figure
     from matplotlib.patches import Arc, FancyArrowPatch, Polygon
 except ImportError as e:
-    raise ImportError(
-        "matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]"
-    ) from e
+    e.add_note("matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]")
+    raise
 
 
 @dataclass
@@ -242,7 +241,8 @@ def plot_transition(
     if load_types:
         legend_handles = [
             Line2D(
-                [0], [0],
+                [0],
+                [0],
                 marker=load_marker,
                 color=load_color_dict[name],
                 markersize=10,
@@ -288,8 +288,12 @@ def plot_transition(
             theta2 = 90.0 + angle_deg - gap
 
             arc = Arc(
-                (cx, cy), 2 * radius, 2 * radius,
-                angle=0, theta1=min(theta1, theta2), theta2=max(theta1, theta2),
+                (cx, cy),
+                2 * radius,
+                2 * radius,
+                angle=0,
+                theta1=min(theta1, theta2),
+                theta2=max(theta1, theta2),
                 color=rotation_arrow_color,
                 linewidth=rotation_arrow_width,
                 zorder=12,

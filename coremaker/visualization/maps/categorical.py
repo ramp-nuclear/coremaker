@@ -15,9 +15,8 @@ try:
     from matplotlib.figure import Figure
     from matplotlib.patches import Patch
 except ImportError as e:
-    raise ImportError(
-        "matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]"
-    ) from e
+    e.add_note("matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]")
+    raise
 
 
 def plot_categorical(

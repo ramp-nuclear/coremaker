@@ -1,8 +1,8 @@
-"""Core Visualization Library (CVL).
+"""Core Visualization Library.
 
 A modular library for automated generation of 2D radial core maps at the
-homogenized assembly level.  All plotting functions accept a
-``coremaker.core.Core`` object directly.
+homogenized assembly level.
+All plotting functions accept a ``coremaker.core.Core`` object directly.
 
 Install the visualization extra to use this module::
 

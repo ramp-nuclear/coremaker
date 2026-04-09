@@ -7,9 +7,8 @@ from coremaker.visualization.types import CellGeometry, CellShape
 try:
     from matplotlib.patches import Polygon, Rectangle
 except ImportError as e:
-    raise ImportError(
-        "matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]"
-    ) from e
+    e.add_note("matplotlib is required for visualization. Install with: pip install ramp-coremaker[viz]")
+    raise
 
 
 def make_patch(geom: CellGeometry, **kwargs) -> Rectangle | Polygon:
