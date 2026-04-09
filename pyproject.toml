@@ -43,6 +43,9 @@ test = [
     "pytest-regressions",
     "hypothesis"
 ]
+viz = [
+    "matplotlib",
+]
 
 [tool.setuptools.packages.find]
 include = ['coremaker*']

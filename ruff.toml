@@ -4,5 +4,6 @@ line-length = 120
 [lint.per-file-ignores]
 "*__init__.py" = ["F403", "I001"]
 "tests/test_geometries.py" = ["F403", "F405"]
+"tests/test_visualization.py" = ["E402"]
 "coremaker/plane_intersection.py" = ["F811"]
 "coremaker/amounts.py" = ["F811"]

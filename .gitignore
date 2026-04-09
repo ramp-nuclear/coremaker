@@ -7,3 +7,12 @@ venv
 /docs/source/_static/
 .hypothesis
 .pytest_cache
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.svg
