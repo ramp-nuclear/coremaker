@@ -40,7 +40,7 @@ jobs:
         python-version: '3.14' 
     - name: Install this package
       run: |
-        pip install .[test]
+        pip install .[test,viz]
     - name: Doctest
       run: |
         pytest -v --doctest-modules coremaker
