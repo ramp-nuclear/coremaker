@@ -4,7 +4,6 @@ import numpy as np
 
 from coremaker.grids.cartgrid import CartesianGrid
 from coremaker.grids.cartspaced import GeneralSpacedGrid, SpacedGrid
-
 from coremaker.visualization.types import CellGeometry, CellShape
 
 

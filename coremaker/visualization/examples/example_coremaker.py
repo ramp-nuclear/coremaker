@@ -20,6 +20,15 @@ Run with::
 from copy import deepcopy
 
 import numpy as np
+from coreoperator.mobilization import (
+    CyclicShuffle,
+    LoadChain,
+    LoadSite,
+    Remove,
+    Scheme,
+    TransformInPlace,
+)
+
 from coremaker.example import example_core, fuel_rod_tree
 from coremaker.transform import rotate90, rotate180, rotate270
 from coremaker.visualization import (
@@ -29,14 +38,6 @@ from coremaker.visualization import (
     plot_scheme,
 )
 from coremaker.visualization.coregeometry import all_site_geometries, occupied_sites
-from coreoperator.mobilization import (
-    CyclicShuffle,
-    LoadChain,
-    LoadSite,
-    Remove,
-    Scheme,
-    TransformInPlace,
-)
 
 
 def fresh_fuel_rod():

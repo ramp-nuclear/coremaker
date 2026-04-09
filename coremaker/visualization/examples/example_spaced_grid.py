@@ -19,6 +19,7 @@ from pathlib import PurePath
 from string import ascii_uppercase
 
 import numpy as np
+from coreoperator.mobilization import CyclicShuffle, LoadChain, LoadSite, Remove, Scheme
 
 from coremaker.core import Core
 from coremaker.geometries.box import Box
@@ -35,7 +36,6 @@ from coremaker.visualization import (
     plot_scheme,
 )
 from coremaker.visualization.coregeometry import all_site_geometries, occupied_sites
-from coreoperator.mobilization import CyclicShuffle, LoadChain, LoadSite, Remove, Scheme
 
 alphabet = ascii_uppercase
 
