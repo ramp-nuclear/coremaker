@@ -34,12 +34,13 @@ autodoc_member_order = "groupwise"
 autodoc_inherit_docstrings = False
 mathjax_path = "mathjax/es5/tex-chtml-full.js"
 extensions = [
-    "nbsphinx",
+    "myst_nb",
     "sphinx_rtd_theme",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinxcontrib.mermaid",
     "sphinx.ext.mathjax",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
@@ -56,7 +57,8 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
+myst_enable_extensions = ["html_image"]
+myst_fence_as_directive = ["mermaid"]
 
 # -- Options for HTML output -------------------------------------------------
 
