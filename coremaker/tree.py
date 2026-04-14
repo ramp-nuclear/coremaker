@@ -616,6 +616,8 @@ class Tree(Serializable):
         g.add_edges_from(
             [(p, r, dict(type="ex-exclusive")) for p, lst in self.external_exclusive.items() for (r, _) in lst]
         )
+        edgeless = set(self.nodes) - set(g.nodes)
+        g.add_nodes_from(edgeless)
 
         inclusives = {(u, v): d["type"] for u, v, d in g.edges(data=True) if d["type"] == "inclusive"}
         exclusives = {(u, v): d["type"] for u, v, d in g.edges(data=True) if d["type"] == "exclusive"}
@@ -660,6 +662,7 @@ class Tree(Serializable):
         )
 
         plt.axis("off")  # Hide axes
+        plt.tight_layout()
         if path is None:
             plt.show()
         else:
