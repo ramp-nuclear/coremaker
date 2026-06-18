@@ -2,7 +2,7 @@
 
 import math
 from functools import lru_cache
-from typing import Any, Sequence, Type, TypeVar, Literal
+from typing import Any, Literal, Sequence, Type, TypeVar
 
 from scipy.optimize import linprog
 from scipy.spatial import ConvexHull, HalfspaceIntersection

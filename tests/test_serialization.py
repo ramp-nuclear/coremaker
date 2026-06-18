@@ -41,8 +41,8 @@ from coremaker.geometries import (
     HexPrism,
     Rectangle,
     Ring,
-    infiniteGeometry,
     TriPrism,
+    infiniteGeometry,
 )
 from coremaker.geometries import (
     Box as BoxGeo,

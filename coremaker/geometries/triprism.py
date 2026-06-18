@@ -1,7 +1,6 @@
-from typing import Self, Any, Type
+from typing import Any, Self, Type
 
 import numpy as np
-
 from ramp_core.serializable import Serializable, deserialize_default
 from scipy.linalg import norm
 
