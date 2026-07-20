@@ -10,6 +10,7 @@ from coremaker.geometries.ball import Ball, Circle
 from coremaker.geometries.box import Box, Rectangle
 from coremaker.geometries.cylinder import FiniteCylinder
 from coremaker.geometries.hex import Hexagon, HexPrism
+from coremaker.geometries.triprism import TriPrism
 from coremaker.surfaces.cylinder import Cylinder
 from coremaker.surfaces.plane import Plane
 from coremaker.surfaces.sphere import Sphere
@@ -25,6 +26,11 @@ transforms = st.builds(Transform.from_rotation, st.tuples(medfloats, medfloats, 
 
 planes = st.tuples(
     st.tuples(medfloats, medfloats, medfloats).filter(lambda x: norm2(x, ord=2) > 1e-3),
+    medfloats,
+).map(lambda x: Plane(*x[0], x[1]))
+
+zlessplanes = st.tuples(
+    st.tuples(medfloats, medfloats, st.just(0)).filter(lambda x: norm2(x, ord=2) > 1e-3),
     medfloats,
 ).map(lambda x: Plane(*x[0], x[1]))
 
@@ -76,6 +82,13 @@ rings = st.builds(
 )
 
 hexagons = st.builds(Hexagon, st.tuples(medfloats, medfloats), medfloats)
+triprisms = st.builds(
+    TriPrism,
+    st.tuples(zlessplanes, zlessplanes, zlessplanes),
+    posfloats,
+    st.tuples(medfloats, medfloats, medfloats),
+    check=st.just(True),
+)
 
 settings.register_profile("fast", max_examples=50, deadline=None)
 settings.register_profile("thorough", max_examples=500, deadline=None)

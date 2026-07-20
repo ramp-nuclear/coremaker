@@ -19,6 +19,7 @@ from conftest import (
     rectangles,
     rings,
     spheres,
+    triprisms,
 )
 from conftest import boxes as boxgeos
 from hypothesis import given, settings
@@ -40,6 +41,7 @@ from coremaker.geometries import (
     HexPrism,
     Rectangle,
     Ring,
+    TriPrism,
     infiniteGeometry,
 )
 from coremaker.geometries import (
@@ -220,6 +222,7 @@ strats = {
     BoxGeo: boxgeos,
     FiniteCylinder: finitecylinders,
     HexPrism: hexprisms,
+    TriPrism: triprisms,
     ConcreteHoledGeometry: holed,
     ConcreteUnionGeometry: unions,
     CartesianLattice: cartlats,

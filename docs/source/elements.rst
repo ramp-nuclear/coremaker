@@ -1,3 +1,5 @@
+.. _Elements reference:
+
 Elements
 ========
 These are tools for the construction of known things used in many reactors.

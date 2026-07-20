@@ -7,6 +7,7 @@ from .box import Box, Rectangle
 from .cylinder import FiniteCylinder
 from .hex import HexPrism, Hexagon
 from .infinite import infiniteGeometry
+from .triprism import TriPrism
 from .union import ConcreteUnionGeometry
 
 jsonable = [
@@ -22,5 +23,6 @@ jsonable = [
     Circle,
     Rectangle,
     Hexagon,
+    TriPrism,
 ]
 serialization_identifiers = {c.ser_identifier: c for c in jsonable}
