@@ -1,8 +1,11 @@
 dependencies:
+  - jupyter
   - mathjax
   - numpydoc
+  - myst-nb
   - sphinx
   - sphinx_rtd_theme
+  - sphinxcontrib-mermaid
   - hypothesis
   - pytest
   - pytest-regressions

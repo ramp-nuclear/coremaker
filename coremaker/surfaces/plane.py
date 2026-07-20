@@ -2,7 +2,7 @@
 
 import math
 from functools import lru_cache
-from typing import Any, Sequence, Type, TypeVar
+from typing import Any, Literal, Sequence, Type, TypeVar
 
 from scipy.optimize import linprog
 from scipy.spatial import ConvexHull, HalfspaceIntersection
@@ -92,6 +92,23 @@ class Plane(Serializable):
             return self.a == other.a and self.b == other.b
         return NotImplemented
 
+    def check_point(self, point: tuple[float, float, float]) -> Literal[-1, 0, 1]:
+        """Checks if a point is positive to the surface or negative.
+
+        Parameters
+        ----------
+        point: tuple[float, float, float]
+            Float to check against the plane
+
+        """
+        v = np.dot(self.a, point) + self.b
+        if v > 0:
+            return 1
+        return 0 if v == 0 else -1
+
+    def distance(self, point: tuple[float, float, float]) -> float:
+        return abs(np.dot(self.a, point) + self.b / norm(self.a, ord=2))
+
     def normal(self, point: tuple[cm, cm, cm]) -> tuple[float, float, float]:
         n = norm(self.a, ord=2)
         if not n:
@@ -117,14 +134,14 @@ class Plane(Serializable):
         if not any(self.a):
             return "Plane<Undefined plane with a=0!>"
         if a1 != 0 and self.isclose(Plane(a1, 0.0, 0.0, self.b)):
-            sign = "-" if a1 < 0 else ""
-            return f"Plane<{sign}x >= {abs(self.b / a1):.3e}>"
+            sign = "<" if a1 < 0 else ">"
+            return f"Plane<x {sign}= {self.b / a1:.3e}>"
         elif a2 != 0 and self.isclose(Plane(0.0, a2, 0.0, self.b)):
-            sign = "-" if a2 < 0 else ""
-            return f"Plane<{sign}y >= {abs(self.b / a2):.3e}>"
+            sign = "<" if a2 < 0 else ">"
+            return f"Plane<y {sign}= {self.b / a2:.3e}>"
         elif a3 != 0 and self.isclose(Plane(0.0, 0.0, a3, self.b)):
-            sign = "-" if a3 < 0 else ""
-            return f"Plane<{sign}z >= {abs(self.b / a3):.3e}>"
+            sign = "<" if a3 < 0 else ">"
+            return f"Plane<z {sign}= {self.b / a3:.3e}>"
         elif self.isclose(Plane(0.0, a2, a3, self.b)):
             return f"Plane<{a2:.3e}y + {a3:.3e}z >= {self.b:.3e}>"
         elif self.isclose(Plane(a1, 0.0, a3, self.b)):
